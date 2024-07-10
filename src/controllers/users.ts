@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { IUser } from "../models/User";
+import User, { IUser } from "../models/User";
 
-import User from "../models/User";
 import bcrypt from "bcryptjs";
 import passport from "passport";
 
