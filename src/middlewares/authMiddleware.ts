@@ -1,34 +1,35 @@
-// import Blog from "../models/Blog";
+import { Request, Response, NextFunction } from "express";
+import Event from "../models/Event";
 
-// exports.ensureAuthenticated = (
+exports.ensureAuthenticated = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (req.isAuthenticated()) {
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: "Please login to do that.",
+  });
+};
+
+// exports.checkEventOwnership = async (
 //   req: Request,
 //   res: Response,
 //   next: NextFunction
 // ) => {
 //   if (req.isAuthenticated()) {
-//     return next();
-//   }
-//   return res.status(403).json({
-//     success: false,
-//     message: "Please login to do that.",
-//   });
-// };
+//     let event = await Event.findById(req.params.id);
 
-// exports.checkBlogOwnership = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   if (req.isAuthenticated()) {
-//     let blog = await Blog.findById(req.params.id);
-
-//     if (blog === null) {
+//     if (event === null) {
 //       return res.status(403).json({
 //         success: false,
-//         message: "Blog not found.",
+//         message: "Event not found.",
 //       });
 //     } else {
-//       if (blog.author.id.equals(req.user._id)) {
+//       if (event.author.id === req.user.id) {
 //         next();
 //       } else {
 //         return res.status(403).json({

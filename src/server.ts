@@ -33,11 +33,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 const users = require("./routes/users");
+const events = require("./routes/events");
 
 app.get("/", (req: Request, res: Response) => {
   res.send("hello");
 });
+
 app.use("/users", users);
+app.use("/events", events);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
