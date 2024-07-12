@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import Event, { IAuthor } from "../models/Event";
+import Event, { IEvent, IAuthor } from "../models/Event";
+import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
+import moment from "moment";
+import fs from "fs";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -27,6 +30,106 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
       error: "Server Error",
     });
   }
+};
+
+exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
+  const token = req.token;
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+
+      try {
+        if (!req.file) {
+          return res.status(400).json({
+            success: false,
+            message: "No file uploaded",
+          });
+        }
+
+        const result = await cloudinary.uploader.upload(req.file.path);
+
+        // delete file from file directory
+        fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+        });
+
+        fs.unlink(req.file.path, (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+        });
+
+        const {
+          name,
+          venue,
+          category,
+          description,
+          date,
+          time,
+          price,
+          createdAt,
+        } = req.body;
+
+        const parsedDate = moment(date, "dddd, MMMM DD, YYYY");
+
+        const newEvent: IEvent = new Event({
+          name,
+          venue,
+          category,
+          description,
+          date: parsedDate,
+          time,
+          price,
+          backdrop: result.secure_url,
+          createdAt,
+          author: {
+            _id: authData.user._id,
+            name: authData.user.name,
+            email: authData.user.email,
+          },
+        });
+
+        const event = await newEvent.save();
+
+        return res.status(201).json({
+          success: true,
+          data: event,
+        });
+      } catch (err: any) {
+        if (err.name === "ValidationError") {
+          const messages = Object.values(err.errors).map(
+            (val: any) => val.message
+          );
+          return res.status(400).json({
+            success: false,
+            error: messages,
+          });
+        } else {
+          return res.status(500).json({
+            success: false,
+            error: err.message,
+          });
+        }
+      }
+    }
+  });
 };
 
 // exports.getEvent = async (req: Request, res: Response, next: NextFunction) => {
@@ -57,79 +160,101 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
 //   }
 // };
 
-exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.token;
+// exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
+//   const token = req.token;
 
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: "Unauthorized: Missing token",
-    });
-  }
+//   if (!token) {
+//     return res.status(401).json({
+//       success: false,
+//       error: "Unauthorized: Missing token",
+//     });
+//   }
 
-  jwt.verify(token, "secretkey", async (err, decoded) => {
-    if (err) {
-      return res.status(403).json({
-        success: false,
-        error: "Forbidden",
-      });
-    } else {
-      const authData = decoded as AuthData;
-      try {
-        const {
-          name,
-          venue,
-          category,
-          description,
-          date,
-          time,
-          price,
-          backdrop,
-          createdAt,
-        } = req.body;
+//   jwt.verify(token, "secretkey", async (err, decoded) => {
+//     if (err) {
+//       return res.status(403).json({
+//         success: false,
+//         error: "Forbidden",
+//       });
+//     } else {
+//       const authData = decoded as AuthData;
+//       try {
+//         // Using multer to handle the file upload
+//         upload.single("file")(req, res, async (err: any) => {
+//           if (err) {
+//             return res.status(400).json({
+//               success: false,
+//               message: "File upload failed",
+//               error: err.message,
+//             });
+//           }
 
-        const author: IAuthor = {
-          _id: authData.user._id,
-          name: authData.user.name,
-          email: authData.user.email,
-        };
+//           // Check if req.file exists before uploading to Cloudinary
+//           if (!req.file) {
+//             return res.status(400).json({
+//               success: false,
+//               message: "No file uploaded",
+//             });
+//           }
 
-        const newEvent = new Event({
-          name,
-          venue,
-          category,
-          description,
-          date,
-          time,
-          price,
-          backdrop,
-          createdAt,
-          author,
-        });
-        const event = await newEvent.save();
-        return res.status(201).json({
-          success: true,
-          data: event,
-        });
-      } catch (err: any) {
-        if (err.name === "ValidationError") {
-          const messages = Object.values(err.errors).map(
-            (val: any) => val.message
-          );
-          return res.status(400).json({
-            success: false,
-            error: messages,
-          });
-        } else {
-          return res.status(500).json({
-            success: false,
-            error: err.message,
-          });
-        }
-      }
-    }
-  });
-};
+//           // Uploading file to Cloudinary
+//           const result = await cloudinary.uploader.upload(req.file.path);
+//         });
+
+//         const {
+//           name,
+//           venue,
+//           category,
+//           description,
+//           date,
+//           time,
+//           price,
+//           backdrop,
+//           createdAt,
+//         } = req.body;
+
+//         const author: IAuthor = {
+//           _id: authData.user._id,
+//           name: authData.user.name,
+//           email: authData.user.email,
+//         };
+
+//         const newEvent = new Event({
+//           name,
+//           venue,
+//           category,
+//           description,
+//           date,
+//           time,
+//           price,
+//           backdrop,
+//           createdAt,
+//           author,
+//         });
+//         const event = await newEvent.save();
+//         return res.status(201).json({
+//           success: true,
+//           data: event,
+//         });
+//       } catch (err: any) {
+//         if (err.name === "ValidationError") {
+//           const messages = Object.values(err.errors).map(
+//             (val: any) => val.message
+//           );
+//           return res.status(400).json({
+//             success: false,
+//             error: messages,
+//           });
+//         } else {
+//           return res.status(500).json({
+//             success: false,
+//             error: err.message,
+//           });
+//         }
+//       }
+//     }
+//   });
+// };
 
 // exports.updateEvent = async (
 //   req: Request,
