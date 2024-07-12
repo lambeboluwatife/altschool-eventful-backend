@@ -5,13 +5,9 @@ import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
 
-// const connectDB = require("./config/db");
 import connectDB from "./config/db";
 
 dotenv.config({ path: "./src/config/config.env" });
-
-// Passport config
-// require("./config/passport")(passport);
 
 connectDB();
 
@@ -36,7 +32,7 @@ const users = require("./routes/users");
 const events = require("./routes/events");
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("hello");
+  res.send("hello, welcome to eventful");
 });
 
 app.use("/users", users);
@@ -46,7 +42,7 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
 
-app.all("*", (req, res) => {
+app.all("*", (req: Request, res: Response) => {
   res.status(404).send("404 - route not found");
 });
 
