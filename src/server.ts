@@ -4,7 +4,7 @@ import "colors";
 import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
-const cors = require("cors");
+import cors, { CorsOptions } from "cors";
 
 import connectDB from "./config/db";
 
@@ -15,7 +15,27 @@ connectDB();
 const app: Application = express();
 
 app.use(express.json());
-app.use(cors());
+
+const devOrigin = process.env.DEV_ORIGIN;
+const prodOrigin = process.env.PROD_ORIGIN;
+
+const allowedOrigins: string[] = [devOrigin!, prodOrigin!];
+
+const corsOptions: CorsOptions = {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void
+  ) => {
+    // Check if the origin is in the allowed origins array
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+
+app.use(cors(corsOptions));
 
 // Express Session
 app.use(
