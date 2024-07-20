@@ -8,12 +8,14 @@ interface IAuthor {
 
 interface IEvent extends Document {
   name: string;
+  organizer?: string;
   venue: string;
   category: string;
   description: string;
   date: string;
   time: string;
-  price: string;
+  price: number;
+  ticket: number;
   backdrop: string;
   createdAt: Date;
   author: IAuthor;
@@ -25,6 +27,7 @@ const eventSchema = new Schema<IEvent>({
     required: [true, "Please enter event name"],
     trim: true,
   },
+  organizer: { type: String },
   venue: {
     type: String,
     required: [true, "Please enter event venue"],
@@ -46,8 +49,12 @@ const eventSchema = new Schema<IEvent>({
     required: [true, "Please enter event start time"],
   },
   price: {
-    type: String,
+    type: Number,
     required: [true, "Please enter ticket price"],
+  },
+  ticket: {
+    type: Number,
+    required: [true, "Please enter available ticket"],
   },
   backdrop: {
     type: String,

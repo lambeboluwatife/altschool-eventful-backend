@@ -78,12 +78,14 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
         const {
           name,
+          organizer,
           venue,
           category,
           description,
           date,
           time,
           price,
+          ticket,
           createdAt,
         } = req.body;
 
@@ -91,12 +93,14 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
         const newEvent: IEvent = new Event({
           name,
+          organizer,
           venue,
           category,
           description,
           date,
           time,
           price,
+          ticket,
           backdrop: result.secure_url,
           createdAt,
           author: {
