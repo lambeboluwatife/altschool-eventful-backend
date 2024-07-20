@@ -4,7 +4,7 @@ import "colors";
 import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
-import cors, { CorsOptions } from "cors";
+const cors = require("cors")
 
 import connectDB from "./config/db";
 
@@ -13,29 +13,29 @@ dotenv.config({ path: "./src/config/config.env" });
 connectDB();
 
 const app: Application = express();
+app.use(cors({ origin: process.env.NODE_ENV === 'development' ? process.env.DEV_ORIGIN : process.env.PROD_ORIGIN }));
 
 app.use(express.json());
 
-const devOrigin = process.env.DEV_ORIGIN;
-const prodOrigin = process.env.PROD_ORIGIN;
+// const devOrigin = process.env.DEV_ORIGIN;
+// const prodOrigin = process.env.PROD_ORIGIN;
 
-const allowedOrigins: string[] = [devOrigin!, prodOrigin!];
+// const allowedOrigins: string[] = [devOrigin!, prodOrigin!];
 
-const corsOptions: CorsOptions = {
-  origin: (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void
-  ) => {
-    // Check if the origin is in the allowed origins array
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-};
+// const corsOptions: CorsOptions = {
+//   origin: (
+//     origin: string | undefined,
+//     callback: (err: Error | null, allow?: boolean) => void
+//   ) => {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("Not allowed by CORS"));
+//     }
+//   },
+// };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 // Express Session
 app.use(
