@@ -13,26 +13,38 @@ dotenv.config({ path: "./src/config/config.env" });
 connectDB();
 
 const app: Application = express();
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "development"
-        ? process.env.DEV_ORIGIN
-        : process.env.PROD_ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Origin",
-      "X-Requested-With",
-      "Accept",
-      "x-client-key",
-      "x-client-token",
-      "x-client-secret",
-      "Authorization",
-    ],
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin:
+//       process.env.NODE_ENV === "development"
+//         ? process.env.DEV_ORIGIN
+//         : process.env.PROD_ORIGIN,
+//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+//     allowedHeaders: [
+//       "Content-Type",
+//       "Origin",
+//       "X-Requested-With",
+//       "Accept",
+//       "x-client-key",
+//       "x-client-token",
+//       "x-client-secret",
+//       "Authorization",
+//     ],
+//     credentials: true,
+//   })
+// );
+
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://your-production-domain.com",
+  credentials: true,
+  methods: "GET,POST,OPTIONS",
+  allowedHeaders: "Origin,Content-Type,Accept",
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
