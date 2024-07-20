@@ -87,14 +87,14 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           createdAt,
         } = req.body;
 
-        const parsedDate = moment(date, "dddd, MMMM DD, YYYY");
+        // const parsedDate = moment(date, "dddd, MMMM DD, YYYY").format();
 
         const newEvent: IEvent = new Event({
           name,
           venue,
           category,
           description,
-          date: parsedDate,
+          date,
           time,
           price,
           backdrop: result.secure_url,
