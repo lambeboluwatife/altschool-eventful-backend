@@ -4,7 +4,7 @@ import "colors";
 import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
-const cors = require("cors")
+const cors = require("cors");
 
 import connectDB from "./config/db";
 
@@ -13,7 +13,26 @@ dotenv.config({ path: "./src/config/config.env" });
 connectDB();
 
 const app: Application = express();
-app.use(cors({ origin: process.env.NODE_ENV === 'development' ? process.env.DEV_ORIGIN : process.env.PROD_ORIGIN }));
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "development"
+        ? process.env.DEV_ORIGIN
+        : process.env.PROD_ORIGIN,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Origin",
+      "X-Requested-With",
+      "Accept",
+      "x-client-key",
+      "x-client-token",
+      "x-client-secret",
+      "Authorization",
+    ],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
