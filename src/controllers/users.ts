@@ -15,7 +15,7 @@ exports.registerUser = async (
   next: NextFunction
 ) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, verifyPassword } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -31,12 +31,40 @@ exports.registerUser = async (
       });
     }
 
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter email",
+      });
+    }
+
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter password",
+      });
+    }
+
+    if (!verifyPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter verify password",
+      });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
         error: "Password should be a least 6 characters",
       });
     } else {
+      if (password !== verifyPassword) {
+        return res.status(400).json({
+          success: false,
+          error: "Passwords do not match",
+        });
+      }
+
       User.findOne({ email: email }).then((user) => {
         if (user) {
           return res.status(409).json({
