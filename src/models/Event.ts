@@ -11,7 +11,7 @@ interface IEvent extends Document {
   venue: string;
   category: string;
   description: string;
-  date: Date;
+  date: string;
   time: string;
   price: string;
   backdrop: string;
@@ -38,7 +38,7 @@ const eventSchema = new Schema<IEvent>({
     required: [true, "Please enter event description"],
   },
   date: {
-    type: Date,
+    type: String,
     required: [true, "Please enter event date"],
   },
   time: {
