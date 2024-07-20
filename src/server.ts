@@ -4,6 +4,7 @@ import "colors";
 import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
+const cors = require("cors");
 
 import connectDB from "./config/db";
 
@@ -14,6 +15,7 @@ connectDB();
 const app: Application = express();
 
 app.use(express.json());
+app.use(cors());
 
 // Express Session
 app.use(
