@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "../models/User";
+import Organizer from "../models/Organizer";
+import Attendee from "../models/Attendee";
 
 import bcrypt from "bcryptjs";
 import passport from "passport";
@@ -15,7 +17,15 @@ exports.registerUser = async (
   next: NextFunction
 ) => {
   try {
-    const { name, email, password, verifyPassword } = req.body;
+    const {
+      name,
+      username,
+      email,
+      role,
+      organizationName,
+      password,
+      verifyPassword,
+    } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -24,10 +34,10 @@ exports.registerUser = async (
       });
     }
 
-    if (!email) {
+    if (!username) {
       return res.status(400).json({
         success: false,
-        error: "Enter email",
+        error: "Enter username",
       });
     }
 
@@ -35,6 +45,13 @@ exports.registerUser = async (
       return res.status(400).json({
         success: false,
         error: "Enter email",
+      });
+    }
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        error: "Enter role",
       });
     }
 
@@ -52,50 +69,83 @@ exports.registerUser = async (
       });
     }
 
+    if (role === "organizer" && !organizationName) {
+      return res.status(400).json({
+        message: "Organization name is required for organizers",
+      });
+    }
+
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
         error: "Password should be a least 6 characters",
       });
-    } else {
-      if (password !== verifyPassword) {
-        return res.status(400).json({
-          success: false,
-          error: "Passwords do not match",
-        });
-      }
+    }
 
-      User.findOne({ email: email }).then((user) => {
-        if (user) {
-          return res.status(409).json({
-            success: false,
-            error:
-              "The email address is already registered. Please use a different email.",
-          });
-        } else {
-          const newUser = new User({
-            name,
-            email,
-            password,
-          });
-
-          // Mash Password
-          bcrypt.genSalt(10, (err, salt) =>
-            bcrypt.hash(newUser.password, salt, (err, hash) => {
-              if (err) throw err;
-              // Set password to hashed
-              newUser.password = hash;
-              // Save user
-              const user = newUser.save();
-              return res.status(201).json({
-                success: true,
-                data: "user registered",
-              });
-            })
-          );
-        }
+    if (password !== verifyPassword) {
+      return res.status(400).json({
+        success: false,
+        error: "Passwords do not match",
       });
     }
+
+    User.findOne({ email: email }).then((user) => {
+      if (user) {
+        return res.status(409).json({
+          success: false,
+          error: "Email address already exist. Please use a different email.",
+        });
+      } else {
+        const newUser = new User({
+          name,
+          username,
+          email,
+          role,
+          password,
+        });
+
+        // Mash Password
+        bcrypt.genSalt(10, (err, salt) =>
+          bcrypt.hash(newUser.password, salt, async (err, hash) => {
+            if (err) throw err;
+            // Set password to hashed
+            newUser.password = hash;
+            // Save user
+            const savedUser = await newUser.save();
+            if (role === "organizer") {
+              // Create the organizer entry
+              const newOrganizer = new Organizer({
+                userId: savedUser._id,
+                organizationName,
+                createdEvents: [],
+              });
+
+              const savedOrganizer = await newOrganizer.save();
+
+              res.status(201).json({
+                message: "Organizer registered successfully",
+                userId: savedUser._id,
+                organizerId: savedOrganizer._id,
+              });
+            } else {
+              // Create the attendee entry
+              const newAttendee = new Attendee({
+                userId: savedUser._id,
+                appliedEvents: [],
+              });
+
+              const savedAttendee = await newAttendee.save();
+
+              res.status(201).json({
+                message: "Attendee registered successfully",
+                userId: savedUser._id,
+                attendeeId: savedAttendee._id,
+              });
+            }
+          })
+        );
+      }
+    });
   } catch (err: any) {
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((val: any) => val.message);
