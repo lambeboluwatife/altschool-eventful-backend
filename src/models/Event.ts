@@ -1,36 +1,35 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IAuthor {
-  _id: string;
+  [x: string]: any;
+  authorId: Schema.Types.ObjectId;
   name: string;
   email: string;
 }
 
 interface IEvent extends Document {
-  name: string;
-  organizer?: string;
-  venue: string;
+  title: string;
+  location: string;
   category: string;
   description: string;
   date: string;
   time: string;
   price: number;
-  ticket: number;
+  capacity: number;
   backdrop: string;
   createdAt: Date;
   author: IAuthor;
 }
 
 const eventSchema = new Schema<IEvent>({
-  name: {
+  title: {
     type: String,
-    required: [true, "Please enter event name"],
+    required: [true, "Please enter event title"],
     trim: true,
   },
-  organizer: { type: String },
-  venue: {
+  location: {
     type: String,
-    required: [true, "Please enter event venue"],
+    required: [true, "Please enter event location"],
   },
   category: {
     type: String,
@@ -52,7 +51,7 @@ const eventSchema = new Schema<IEvent>({
     type: Number,
     required: [true, "Please enter ticket price"],
   },
-  ticket: {
+  capacity: {
     type: Number,
     required: [true, "Please enter available ticket"],
   },
@@ -65,7 +64,7 @@ const eventSchema = new Schema<IEvent>({
     default: Date.now,
   },
   author: {
-    id: {
+    authorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },

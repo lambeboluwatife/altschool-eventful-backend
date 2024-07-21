@@ -78,7 +78,6 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
         const {
           name,
-          organizer,
           venue,
           category,
           description,
@@ -93,7 +92,6 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
         const newEvent: IEvent = new Event({
           name,
-          organizer,
           venue,
           category,
           description,
@@ -104,7 +102,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           backdrop: result.secure_url,
           createdAt,
           author: {
-            _id: authData.user._id,
+            authorId: authData.user._id,
             name: authData.user.name,
             email: authData.user.email,
           },
