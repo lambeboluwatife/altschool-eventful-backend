@@ -25,15 +25,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const eventSchema = new mongoose_1.Schema({
-    name: {
+    title: {
         type: String,
-        required: [true, "Please enter event name"],
+        required: [true, "Please enter event title"],
         trim: true,
     },
-    organizer: { type: String },
-    venue: {
+    location: {
         type: String,
-        required: [true, "Please enter event venue"],
+        required: [true, "Please enter event location"],
     },
     category: {
         type: String,
@@ -55,9 +54,9 @@ const eventSchema = new mongoose_1.Schema({
         type: Number,
         required: [true, "Please enter ticket price"],
     },
-    ticket: {
+    capacity: {
         type: Number,
-        required: [true, "Please enter available ticket"],
+        required: [true, "Please enter event capacity"],
     },
     backdrop: {
         type: String,
@@ -67,12 +66,12 @@ const eventSchema = new mongoose_1.Schema({
         type: Date,
         default: Date.now,
     },
-    author: {
-        id: {
+    organizer: {
+        organizerId: {
             type: mongoose_1.default.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "Organizer",
         },
-        name: String,
+        organizationName: String,
         email: String,
     },
 });

@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import Event, { IEvent, IAuthor } from "../models/Event";
+import User from "../models/User";
+import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
 import moment from "moment";
@@ -52,6 +54,23 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
       const authData = decoded as AuthData;
 
       try {
+        const user = await User.findById(authData.user._id).exec();
+        if (!user || user.role !== "organizer") {
+          return res.status(403).json({
+            message: "Access denied. Only organizers can perform this action.",
+          });
+        }
+
+        const organizer = await Organizer.findOne({
+          userId: authData.user._id,
+        }).exec();
+        if (!organizer) {
+          return res.status(404).json({
+            success: false,
+            message: "Organizer details not found",
+          });
+        }
+
         if (!req.file) {
           return res.status(400).json({
             success: false,
@@ -65,45 +84,35 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
         fs.unlink(req.file.path, (err) => {
           if (err) {
             console.error(err);
-            return;
-          }
-        });
-
-        fs.unlink(req.file.path, (err) => {
-          if (err) {
-            console.error(err);
-            return;
           }
         });
 
         const {
-          name,
-          venue,
+          title,
+          location,
           category,
           description,
           date,
           time,
           price,
-          ticket,
+          capacity,
           createdAt,
         } = req.body;
 
-        // const parsedDate = moment(date, "dddd, MMMM DD, YYYY").format();
-
         const newEvent: IEvent = new Event({
-          name,
-          venue,
+          title,
+          location,
           category,
           description,
           date,
           time,
           price,
-          ticket,
+          capacity,
           backdrop: result.secure_url,
           createdAt,
-          author: {
-            authorId: authData.user._id,
-            name: authData.user.name,
+          organizer: {
+            organizerId: authData.user._id,
+            organizationName: organizer?.organizationName,
             email: authData.user.email,
           },
         });
@@ -205,7 +214,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
 //         const {
 //           name,
-//           venue,
+//           location,
 //           category,
 //           description,
 //           date,
@@ -223,7 +232,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
 //         const newEvent = new Event({
 //           name,
-//           venue,
+//           location,
 //           category,
 //           description,
 //           date,

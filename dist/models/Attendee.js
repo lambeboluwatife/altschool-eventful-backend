@@ -24,36 +24,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const userSchema = new mongoose_1.Schema({
-    name: {
-        type: String,
-        required: [true, "Please enter your name"],
-        trim: true,
+const attendeeSchema = new mongoose_1.Schema({
+    userId: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
     },
-    username: {
-        type: String,
-        required: [true, "Please enter your username"],
-        trim: true,
-    },
-    email: {
-        type: String,
-        required: [true, "Please enter your email"],
-        unique: true,
-        trim: true,
-    },
-    role: {
-        type: String,
-        required: [true, "Please enter role"],
-        trim: true,
-    },
-    password: {
-        type: String,
-        required: [true, "Please enter your password"],
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
+    appliedEvents: [
+        {
+            eventId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Event" },
+            title: { type: String },
+            location: { type: String },
+            category: { type: String },
+            description: { type: String },
+            date: { type: String },
+            time: { type: String },
+            price: { type: Number },
+            capacity: { type: Number },
+            backdrop: { type: String },
+        },
+    ],
 });
-const User = mongoose_1.default.model("User", userSchema);
-exports.default = User;
+const Attendee = mongoose_1.default.model("Attendee", attendeeSchema);
+exports.default = Attendee;
