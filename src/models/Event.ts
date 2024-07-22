@@ -2,8 +2,8 @@ import mongoose, { Schema, Document } from "mongoose";
 
 interface IAuthor {
   [x: string]: any;
-  authorId: Schema.Types.ObjectId;
-  name: string;
+  organizerId: Schema.Types.ObjectId;
+  organizationName: string;
   email: string;
 }
 
@@ -18,7 +18,7 @@ interface IEvent extends Document {
   capacity: number;
   backdrop: string;
   createdAt: Date;
-  author: IAuthor;
+  organizer: IAuthor;
 }
 
 const eventSchema = new Schema<IEvent>({
@@ -53,7 +53,7 @@ const eventSchema = new Schema<IEvent>({
   },
   capacity: {
     type: Number,
-    required: [true, "Please enter available ticket"],
+    required: [true, "Please enter event capacity"],
   },
   backdrop: {
     type: String,
@@ -63,12 +63,12 @@ const eventSchema = new Schema<IEvent>({
     type: Date,
     default: Date.now,
   },
-  author: {
-    authorId: {
+  organizer: {
+    organizerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Organizer",
     },
-    name: String,
+    organizationName: String,
     email: String,
   },
 });

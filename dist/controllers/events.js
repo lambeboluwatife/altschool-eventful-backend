@@ -13,6 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Event_1 = __importDefault(require("../models/Event"));
+const User_1 = __importDefault(require("../models/User"));
+const Organizer_1 = __importDefault(require("../models/Organizer"));
 const cloudinaryConfig_1 = require("../config/cloudinaryConfig");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
@@ -50,6 +52,21 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         else {
             const authData = decoded;
             try {
+                const user = yield User_1.default.findById(authData.user._id).exec();
+                if (!user || user.role !== "organizer") {
+                    return res.status(403).json({
+                        message: "Access denied. Only organizers can perform this action.",
+                    });
+                }
+                const organizer = yield Organizer_1.default.findOne({
+                    userId: authData.user._id,
+                }).exec();
+                if (!organizer) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Organizer details not found",
+                    });
+                }
                 if (!req.file) {
                     return res.status(400).json({
                         success: false,
@@ -61,32 +78,23 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 fs_1.default.unlink(req.file.path, (err) => {
                     if (err) {
                         console.error(err);
-                        return;
                     }
                 });
-                fs_1.default.unlink(req.file.path, (err) => {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-                });
-                const { name, organizer, venue, category, description, date, time, price, ticket, createdAt, } = req.body;
-                // const parsedDate = moment(date, "dddd, MMMM DD, YYYY").format();
+                const { title, location, category, description, date, time, price, capacity, createdAt, } = req.body;
                 const newEvent = new Event_1.default({
-                    name,
-                    organizer,
-                    venue,
+                    title,
+                    location,
                     category,
                     description,
                     date,
                     time,
                     price,
-                    ticket,
+                    capacity,
                     backdrop: result.secure_url,
                     createdAt,
-                    author: {
-                        _id: authData.user._id,
-                        name: authData.user.name,
+                    organizer: {
+                        organizerId: authData.user._id,
+                        organizationName: organizer === null || organizer === void 0 ? void 0 : organizer.organizationName,
                         email: authData.user.email,
                     },
                 });
@@ -177,7 +185,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 //         });
 //         const {
 //           name,
-//           venue,
+//           location,
 //           category,
 //           description,
 //           date,
@@ -193,7 +201,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 //         };
 //         const newEvent = new Event({
 //           name,
-//           venue,
+//           location,
 //           category,
 //           description,
 //           date,
