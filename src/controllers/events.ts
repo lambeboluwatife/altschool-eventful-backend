@@ -95,6 +95,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           time,
           price,
           capacity,
+          applicants,
           ticketsSold,
           reminders,
           createdAt,
@@ -112,6 +113,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           price,
           capacity,
           backdrop: result.secure_url,
+          applicants: [],
           ticketsSold,
           reminders: reminder,
           createdAt,
@@ -123,7 +125,10 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
         });
 
         const event = await newEvent.save();
-        console.log(authData);
+
+        await Organizer.findByIdAndUpdate(organizer, {
+          $push: { createdEvents: event },
+        });
 
         return res.status(201).json({
           success: true,

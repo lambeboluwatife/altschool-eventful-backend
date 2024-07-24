@@ -66,6 +66,17 @@ const eventSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Please enter event backdrop"],
     },
+    applicants: [
+        {
+            applicantId: {
+                type: mongoose_1.default.Schema.Types.ObjectId,
+                ref: "User"
+            },
+            name: String,
+            username: String,
+            email: String,
+        },
+    ],
     ticketsSold: { type: Number, default: 0 },
     reminders: [reminderSchema],
     createdAt: {

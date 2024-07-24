@@ -80,7 +80,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                         console.error(err);
                     }
                 });
-                const { title, location, category, description, date, time, price, capacity, ticketsSold, reminders, createdAt, } = req.body;
+                const { title, location, category, description, date, time, price, capacity, applicants, ticketsSold, reminders, createdAt, } = req.body;
                 const reminder = { reminderTime: reminders, sent: false };
                 const newEvent = new Event_1.default({
                     title,
@@ -92,6 +92,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     price,
                     capacity,
                     backdrop: result.secure_url,
+                    applicants: [],
                     ticketsSold,
                     reminders: reminder,
                     createdAt,
@@ -102,7 +103,9 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     },
                 });
                 const event = yield newEvent.save();
-                console.log(authData);
+                yield Organizer_1.default.findByIdAndUpdate(organizer, {
+                    $push: { createdEvents: event },
+                });
                 return res.status(201).json({
                     success: true,
                     data: event,

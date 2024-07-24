@@ -12,6 +12,13 @@ interface IReminder {
   sent: boolean;
 }
 
+interface IApplicant {
+  applicantId: Schema.Types.ObjectId;
+  name: string;
+  username: string;
+  email: string;
+}
+
 interface IEvent extends Document {
   title: string;
   location: string;
@@ -22,6 +29,7 @@ interface IEvent extends Document {
   price: number;
   capacity: number;
   backdrop: string;
+  applicants: IApplicant;
   ticketsSold: number;
   reminders: IReminder;
   createdAt: Date;
@@ -71,6 +79,17 @@ const eventSchema = new Schema<IEvent>({
     type: String,
     required: [true, "Please enter event backdrop"],
   },
+  applicants: [
+    {
+      applicantId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User" 
+      },
+      name: String,
+      username: String,
+      email: String,
+    },
+  ],
   ticketsSold: { type: Number, default: 0 },
   reminders: [reminderSchema],
   createdAt: {
