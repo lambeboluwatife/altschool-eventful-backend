@@ -4,7 +4,6 @@ import User from "../models/User";
 import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
-import moment from "moment";
 import fs from "fs";
 
 declare module "express-serve-static-core" {
@@ -96,8 +95,12 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           time,
           price,
           capacity,
+          ticketsSold,
+          reminders,
           createdAt,
         } = req.body;
+
+        const reminder = { reminderTime: reminders, sent: false };
 
         const newEvent: IEvent = new Event({
           title,
@@ -109,6 +112,8 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           price,
           capacity,
           backdrop: result.secure_url,
+          ticketsSold,
+          reminders: reminder,
           createdAt,
           organizer: {
             organizerId: authData.user._id,
@@ -118,6 +123,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
         });
 
         const event = await newEvent.save();
+        console.log(authData);
 
         return res.status(201).json({
           success: true,
@@ -143,33 +149,58 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
-// exports.getEvent = async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     let event = await Event.findById(req.params.id)
-//       .where("state")
-//       .equals(true);
+exports.getCreatedEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
 
-//     if (event === null) {
-//       return res.status(200).json({
-//         success: true,
-//         data: "No Event with that ID found",
-//       });
-//     } else {
-//       event.read_count = event.read_count + 1;
-//       event = await event.save();
+  if (!authHeader) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
 
-//       return res.status(200).json({
-//         success: true,
-//         data: event,
-//       });
-//     }
-//   } catch (err) {
-//     return res.status(500).json({
-//       success: false,
-//       error: err.message,
-//     });
-//   }
-// };
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+      const organizerId = authData.user._id;
+
+      try {
+        const event = await Event.find({
+          "organizer.organizerId": organizerId,
+        }).exec();
+
+        return res.status(200).json({
+          success: true,
+          events: event.length,
+          data: event,
+        });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          error: err.message,
+        });
+      }
+    }
+  });
+};
 
 // exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 //   const token = req.token;

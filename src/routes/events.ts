@@ -5,12 +5,18 @@ import { upload } from "../config/multerConfig";
 const { verifyToken } = require("../middlewares/jwt");
 // const { checkEventOwnership } = require("../middlewares/authMiddleware");
 
-const { getEvents, addEvent, deleteEvent } = require("../controllers/events");
+const {
+  getEvents,
+  addEvent,
+  getCreatedEvents,
+  deleteEvent,
+} = require("../controllers/events");
 
 router
   .route("/")
   .get(getEvents)
   .post(verifyToken, upload.single("backdrop"), addEvent);
+router.route("/created").get(getCreatedEvents);
 // router.route("/:id").get(getEvent);
 router.route("/:id").delete(deleteEvent);
 

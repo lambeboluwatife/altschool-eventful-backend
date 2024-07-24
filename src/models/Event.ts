@@ -7,6 +7,11 @@ interface IAuthor {
   email: string;
 }
 
+interface IReminder {
+  reminderTime: Date;
+  sent: boolean;
+}
+
 interface IEvent extends Document {
   title: string;
   location: string;
@@ -17,9 +22,16 @@ interface IEvent extends Document {
   price: number;
   capacity: number;
   backdrop: string;
+  ticketsSold: number;
+  reminders: IReminder;
   createdAt: Date;
   organizer: IAuthor;
 }
+
+const reminderSchema = new Schema({
+  reminderTime: { type: Date, required: true },
+  sent: { type: Boolean, default: false },
+});
 
 const eventSchema = new Schema<IEvent>({
   title: {
@@ -59,6 +71,8 @@ const eventSchema = new Schema<IEvent>({
     type: String,
     required: [true, "Please enter event backdrop"],
   },
+  ticketsSold: { type: Number, default: 0 },
+  reminders: [reminderSchema],
   createdAt: {
     type: Date,
     default: Date.now,

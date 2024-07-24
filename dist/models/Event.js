@@ -24,6 +24,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const reminderSchema = new mongoose_1.Schema({
+    reminderTime: { type: Date, required: true },
+    sent: { type: Boolean, default: false },
+});
 const eventSchema = new mongoose_1.Schema({
     title: {
         type: String,
@@ -62,6 +66,8 @@ const eventSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Please enter event backdrop"],
     },
+    ticketsSold: { type: Number, default: 0 },
+    reminders: [reminderSchema],
     createdAt: {
         type: Date,
         default: Date.now,
