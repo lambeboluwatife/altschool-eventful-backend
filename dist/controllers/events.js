@@ -80,7 +80,8 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                         console.error(err);
                     }
                 });
-                const { title, location, category, description, date, time, price, capacity, createdAt, } = req.body;
+                const { title, location, category, description, date, time, price, capacity, ticketsSold, reminders, createdAt, } = req.body;
+                const reminder = { reminderTime: reminders, sent: false };
                 const newEvent = new Event_1.default({
                     title,
                     location,
@@ -91,6 +92,8 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     price,
                     capacity,
                     backdrop: result.secure_url,
+                    ticketsSold,
+                    reminders: reminder,
                     createdAt,
                     organizer: {
                         organizerId: authData.user._id,
@@ -99,6 +102,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     },
                 });
                 const event = yield newEvent.save();
+                console.log(authData);
                 return res.status(201).json({
                     success: true,
                     data: event,
@@ -122,31 +126,50 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         }
     }));
 });
-// exports.getEvent = async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     let event = await Event.findById(req.params.id)
-//       .where("state")
-//       .equals(true);
-//     if (event === null) {
-//       return res.status(200).json({
-//         success: true,
-//         data: "No Event with that ID found",
-//       });
-//     } else {
-//       event.read_count = event.read_count + 1;
-//       event = await event.save();
-//       return res.status(200).json({
-//         success: true,
-//         data: event,
-//       });
-//     }
-//   } catch (err) {
-//     return res.status(500).json({
-//       success: false,
-//       error: err.message,
-//     });
-//   }
-// };
+exports.getCreatedEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({
+            success: false,
+            error: "Unauthorized: Missing token",
+        });
+    }
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: "Unauthorized: Missing token",
+        });
+    }
+    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden",
+            });
+        }
+        else {
+            const authData = decoded;
+            const organizerId = authData.user._id;
+            try {
+                const event = yield Event_1.default.find({
+                    "organizer.organizerId": organizerId,
+                }).exec();
+                return res.status(200).json({
+                    success: true,
+                    events: event.length,
+                    data: event,
+                });
+            }
+            catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: err.message,
+                });
+            }
+        }
+    }));
+});
 // exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 //   const token = req.token;
 //   if (!token) {
