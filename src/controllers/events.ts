@@ -203,90 +203,178 @@ exports.getEventApplicants = async (
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    let event = await Event.findById(req.params.id);
+  const token = req.token;
 
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        error: "No event found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: event.applicants,
-    });
-  } catch (err: any) {
-    return res.status(500).json({
+  if (!token) {
+    return res.status(401).json({
       success: false,
-      error: err.message,
+      error: "Unauthorized: Missing token",
     });
   }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+
+      if (authData.user.role !== "organizer") {
+        return res.status(403).json({
+          success: false,
+          error: "Forbidden - You can't do that!",
+        });
+      }
+
+      try {
+        let event = await Event.findOne({
+          $and: [
+            { _id: req.params.id },
+            { "organizer.organizerId": authData.user._id },
+          ],
+        });
+
+        if (!event) {
+          return res.status(404).json({
+            success: false,
+            error:
+              "No event found or you do not have permission to view applicants for this event",
+          });
+        }
+
+        return res.status(200).json({
+          success: true,
+          data: event.applicants,
+        });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          error: err.message,
+        });
+      }
+    }
+  });
 };
 
-// exports.updateEvent = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const updateFields = req.body;
+exports.updateEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.token;
 
-//     let event = await Event.findById(req.params.id);
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
 
-//     if (!event) {
-//       return res.status(404).json({
-//         success: false,
-//         error: "No event found",
-//       });
-//     }
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
 
-//     Object.keys(updateFields).forEach((key) => {
-//       if (updateFields[key] !== undefined) {
-//         event[key] = updateFields[key];
-//       }
-//     });
+      if (authData.user.role !== "organizer") {
+        return res.status(403).json({
+          success: false,
+          error: "Forbidden - You can't do that!",
+        });
+      }
 
-//     event = await event.save();
+      try {
+        const eventId = req.params.id;
+        const updateData = req.body;
 
-//     return res.status(200).json({
-//       success: true,
-//       data: event,
-//     });
-//   } catch (err) {
-//     return res.status(500).json({
-//       success: false,
-//       error: "Server Error",
-//     });
-//   }
-// };
+        const event = await Event.findById(eventId);
+
+        if (!event) {
+          return res.status(404).json({
+            success: false,
+            message: "Event not found.",
+          });
+        }
+
+        Object.assign(event, updateData);
+        await event.save();
+
+        return res.status(200).json({
+          success: true,
+          data: event,
+        });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          error: err.message,
+        });
+      }
+    }
+  });
+};
 
 exports.deleteEvent = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  try {
-    const event = await Event.findById(req.params.id);
+  const token = req.token;
 
-    if (!event) {
-      return res.status(404).json({
-        success: false,
-        error: "No event found",
-      });
-    }
-
-    await event.deleteOne();
-
-    return res.status(200).json({
-      success: true,
-      data: {},
-    });
-  } catch (err) {
-    return res.status(500).json({
+  if (!token) {
+    return res.status(401).json({
       success: false,
-      error: "Server Error",
+      error: "Unauthorized: Missing token",
     });
   }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+
+      if (authData.user.role !== "organizer") {
+        return res.status(403).json({
+          success: false,
+          error: "Forbidden - You can't do that!",
+        });
+      }
+
+      try {
+        let event = await Event.findOne({
+          $and: [
+            { _id: req.params.id },
+            { "organizer.organizerId": authData.user._id },
+          ],
+        });
+
+        if (!event) {
+          return res.status(404).json({
+            success: false,
+            error: "No event found",
+          });
+        }
+
+        await event.deleteOne();
+
+        return res.status(200).json({
+          success: true,
+          data: {},
+        });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          error: err.message,
+        });
+      }
+    }
+  });
 };

@@ -10,6 +10,7 @@ const {
   addEvent,
   getCreatedEvents,
   getEventApplicants,
+  updateEvent,
   deleteEvent,
 } = require("../controllers/events");
 
@@ -18,7 +19,8 @@ router
   .get(getEvents)
   .post(verifyToken, upload.single("backdrop"), addEvent);
 router.route("/created").get(verifyToken, getCreatedEvents);
-router.route("/:id/applicants").get(getEventApplicants);
-router.route("/:id").delete(deleteEvent);
+router.route("/:id/applicants").get(verifyToken, getEventApplicants);
+router.route("/:id/edit").put(verifyToken, updateEvent);
+router.route("/:id").delete(verifyToken, deleteEvent);
 
 module.exports = router;

@@ -167,76 +167,152 @@ exports.getCreatedEvents = (req, res, next) => __awaiter(void 0, void 0, void 0,
     }));
 });
 exports.getEventApplicants = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let event = yield Event_1.default.findById(req.params.id);
-        if (!event) {
-            return res.status(404).json({
+    const token = req.token;
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: "Unauthorized: Missing token",
+        });
+    }
+    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({
                 success: false,
-                error: "No event found",
+                error: "Forbidden",
             });
         }
-        return res.status(200).json({
-            success: true,
-            data: event.applicants,
-        });
-    }
-    catch (err) {
-        return res.status(500).json({
-            success: false,
-            error: err.message,
-        });
-    }
+        else {
+            const authData = decoded;
+            if (authData.user.role !== "organizer") {
+                return res.status(403).json({
+                    success: false,
+                    error: "Forbidden - You can't do that!",
+                });
+            }
+            try {
+                let event = yield Event_1.default.findOne({
+                    $and: [
+                        { _id: req.params.id },
+                        { "organizer.organizerId": authData.user._id },
+                    ],
+                });
+                if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        error: "No event found or you do not have permission to view applicants for this event",
+                    });
+                }
+                return res.status(200).json({
+                    success: true,
+                    data: event.applicants,
+                });
+            }
+            catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: err.message,
+                });
+            }
+        }
+    }));
 });
-// exports.updateEvent = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const updateFields = req.body;
-//     let event = await Event.findById(req.params.id);
-//     if (!event) {
-//       return res.status(404).json({
-//         success: false,
-//         error: "No event found",
-//       });
-//     }
-//     Object.keys(updateFields).forEach((key) => {
-//       if (updateFields[key] !== undefined) {
-//         event[key] = updateFields[key];
-//       }
-//     });
-//     event = await event.save();
-//     return res.status(200).json({
-//       success: true,
-//       data: event,
-//     });
-//   } catch (err) {
-//     return res.status(500).json({
-//       success: false,
-//       error: "Server Error",
-//     });
-//   }
-// };
-exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const event = yield Event_1.default.findById(req.params.id);
-        if (!event) {
-            return res.status(404).json({
+exports.updateEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.token;
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: "Unauthorized: Missing token",
+        });
+    }
+    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({
                 success: false,
-                error: "No event found",
+                error: "Forbidden",
             });
         }
-        yield event.deleteOne();
-        return res.status(200).json({
-            success: true,
-            data: {},
-        });
-    }
-    catch (err) {
-        return res.status(500).json({
+        else {
+            const authData = decoded;
+            if (authData.user.role !== "organizer") {
+                return res.status(403).json({
+                    success: false,
+                    error: "Forbidden - You can't do that!",
+                });
+            }
+            try {
+                const eventId = req.params.id;
+                const updateData = req.body;
+                const event = yield Event_1.default.findById(eventId);
+                if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "Event not found.",
+                    });
+                }
+                Object.assign(event, updateData);
+                yield event.save();
+                return res.status(200).json({
+                    success: true,
+                    data: event,
+                });
+            }
+            catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: err.message,
+                });
+            }
+        }
+    }));
+});
+exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.token;
+    if (!token) {
+        return res.status(401).json({
             success: false,
-            error: "Server Error",
+            error: "Unauthorized: Missing token",
         });
     }
+    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden",
+            });
+        }
+        else {
+            const authData = decoded;
+            if (authData.user.role !== "organizer") {
+                return res.status(403).json({
+                    success: false,
+                    error: "Forbidden - You can't do that!",
+                });
+            }
+            try {
+                let event = yield Event_1.default.findOne({
+                    $and: [
+                        { _id: req.params.id },
+                        { "organizer.organizerId": authData.user._id },
+                    ],
+                });
+                if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        error: "No event found",
+                    });
+                }
+                yield event.deleteOne();
+                return res.status(200).json({
+                    success: true,
+                    data: {},
+                });
+            }
+            catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    error: err.message,
+                });
+            }
+        }
+    }));
 });
