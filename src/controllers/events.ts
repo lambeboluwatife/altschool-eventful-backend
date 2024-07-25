@@ -159,16 +159,7 @@ exports.getCreatedEvents = async (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader) {
-    return res.status(401).json({
-      success: false,
-      error: "Unauthorized: Missing token",
-    });
-  }
-
-  const token = authHeader.split(" ")[1];
+  const token = req.token;
 
   if (!token) {
     return res.status(401).json({
@@ -207,101 +198,32 @@ exports.getCreatedEvents = async (
   });
 };
 
-// exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
-//   const token = req.token;
+exports.getEventApplicants = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    let event = await Event.findById(req.params.id);
 
-//   if (!token) {
-//     return res.status(401).json({
-//       success: false,
-//       error: "Unauthorized: Missing token",
-//     });
-//   }
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: "No event found",
+      });
+    }
 
-//   jwt.verify(token, "secretkey", async (err, decoded) => {
-//     if (err) {
-//       return res.status(403).json({
-//         success: false,
-//         error: "Forbidden",
-//       });
-//     } else {
-//       const authData = decoded as AuthData;
-//       try {
-//         // Using multer to handle the file upload
-//         upload.single("file")(req, res, async (err: any) => {
-//           if (err) {
-//             return res.status(400).json({
-//               success: false,
-//               message: "File upload failed",
-//               error: err.message,
-//             });
-//           }
-
-//           // Check if req.file exists before uploading to Cloudinary
-//           if (!req.file) {
-//             return res.status(400).json({
-//               success: false,
-//               message: "No file uploaded",
-//             });
-//           }
-
-//           // Uploading file to Cloudinary
-//           const result = await cloudinary.uploader.upload(req.file.path);
-//         });
-
-//         const {
-//           name,
-//           location,
-//           category,
-//           description,
-//           date,
-//           time,
-//           price,
-//           backdrop,
-//           createdAt,
-//         } = req.body;
-
-//         const author: IAuthor = {
-//           _id: authData.user._id,
-//           name: authData.user.name,
-//           email: authData.user.email,
-//         };
-
-//         const newEvent = new Event({
-//           name,
-//           location,
-//           category,
-//           description,
-//           date,
-//           time,
-//           price,
-//           backdrop,
-//           createdAt,
-//           author,
-//         });
-//         const event = await newEvent.save();
-//         return res.status(201).json({
-//           success: true,
-//           data: event,
-//         });
-//       } catch (err: any) {
-//         if (err.name === "ValidationError") {
-//           const messages = Object.values(err.errors).map(
-//             (val: any) => val.message
-//           );
-//           return res.status(400).json({
-//             success: false,
-//             error: messages,
-//           });
-//         } else {
-//           return res.status(500).json({
-//             success: false,
-//             error: err.message,
-//           });
-//         }
-//       }
-//     }
-//   });
-// };
+    return res.status(200).json({
+      success: true,
+      data: event.applicants,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
 
 // exports.updateEvent = async (
 //   req: Request,
