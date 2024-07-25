@@ -9,20 +9,21 @@ exports.ensureAuthenticated = (req, res, next) => {
         message: "Please login to do that.",
     });
 };
-// exports.checkEventOwnership = async (
+// export const checkEventOwnership = async (
 //   req: Request,
 //   res: Response,
 //   next: NextFunction
 // ) => {
 //   if (req.isAuthenticated()) {
-//     let event = await Event.findById(req.params.id);
-//     if (event === null) {
-//       return res.status(403).json({
-//         success: false,
-//         message: "Event not found.",
-//       });
-//     } else {
-//       if (event.author.id === req.user.id) {
+//     try {
+//       const event = await Event.findById(req.params.id);
+//       if (!event) {
+//         return res.status(403).json({
+//           success: false,
+//           message: "Event not found.",
+//         });
+//       }
+//       if (event.organizer.organizerId === req.user.id) {
 //         next();
 //       } else {
 //         return res.status(403).json({
@@ -30,11 +31,16 @@ exports.ensureAuthenticated = (req, res, next) => {
 //           message: "You don't have permission to do that.",
 //         });
 //       }
+//     } catch (err) {
+//       return res.status(500).json({
+//         success: false,
+//         message: "Internal server error",
+//       });
 //     }
 //   } else {
 //     return res.status(403).json({
 //       success: false,
-//       message: "Please login to do that.",
+//       message: "Please log in to do that.",
 //     });
 //   }
 // };
