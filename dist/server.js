@@ -71,11 +71,12 @@ app.use(passport_1.default.initialize());
 app.use(passport_1.default.session());
 const users = require("./routes/users");
 const events = require("./routes/events");
+const attendees = require("./routes/attendees");
 app.get("/", (req, res) => {
     res.send("hello, welcome to eventful");
 });
 app.use("/users", users);
-app.use("/events", events);
+app.use("/events", events, attendees);
 if (process.env.NODE_ENV === "development") {
     app.use((0, morgan_1.default)("dev"));
 }
