@@ -83,13 +83,14 @@ app.use(passport.session());
 
 const users = require("./routes/users");
 const events = require("./routes/events");
+const attendees = require("./routes/attendees");
 
 app.get("/", (req: Request, res: Response) => {
   res.send("hello, welcome to eventful");
 });
 
 app.use("/users", users);
-app.use("/events", events);
+app.use("/events", events, attendees);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
