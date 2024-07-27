@@ -70,7 +70,7 @@ const eventSchema = new mongoose_1.Schema({
         {
             applicantId: {
                 type: mongoose_1.default.Schema.Types.ObjectId,
-                ref: "User"
+                ref: "User",
             },
             name: String,
             username: String,

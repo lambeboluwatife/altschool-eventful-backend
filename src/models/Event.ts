@@ -13,6 +13,8 @@ interface IReminder {
 }
 
 interface IApplicant {
+  push(arg0: { applicantId: any; name: any; username: any; email: string; }): unknown;
+  some(arg0: (applicant: IApplicant) => boolean): unknown;
   applicantId: Schema.Types.ObjectId;
   name: string;
   username: string;
@@ -81,9 +83,9 @@ const eventSchema = new Schema<IEvent>({
   },
   applicants: [
     {
-      applicantId: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "User" 
+      applicantId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
       name: String,
       username: String,
@@ -109,4 +111,4 @@ const eventSchema = new Schema<IEvent>({
 const Event = mongoose.model<IEvent>("Event", eventSchema);
 
 export default Event;
-export { IEvent, IAuthor };
+export { IEvent, IAuthor, IApplicant };

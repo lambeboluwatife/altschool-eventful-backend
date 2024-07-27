@@ -286,40 +286,114 @@ exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 error: "Forbidden",
             });
         }
-        else {
-            const authData = decoded;
-            try {
-                let event = yield Event_1.default.findOne({ _id: req.params.id });
-                if (!event) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "No event found",
-                    });
-                }
-                yield Event_1.default.findByIdAndUpdate(event, {
-                    $push: {
-                        applicants: {
-                            applicantId: authData.user._id,
-                            name: authData.user.name,
-                            username: authData.user.username,
-                            email: authData.user.email,
-                        },
-                    },
-                });
-                return res.status(200).json({
-                    success: true,
-                    message: "Applied for event successfully",
-                });
-            }
-            catch (err) {
-                return res.status(500).json({
+        const authData = decoded;
+        try {
+            const event = yield Event_1.default.findById(req.params.id);
+            if (!event) {
+                return res.status(404).json({
                     success: false,
-                    error: err.message,
+                    error: "No event found",
                 });
             }
+            const alreadyApplied = event.applicants.some((applicant) => applicant.applicantId.toString() === authData.user._id.toString());
+            if (alreadyApplied) {
+                return res.status(405).json({
+                    success: false,
+                    error: "Already applied.",
+                });
+            }
+            if (event.organizer.organizerId.toString() === authData.user._id.toString()) {
+                return res.status(405).json({
+                    success: false,
+                    error: "You can't apply for your own event.",
+                });
+            }
+            event.applicants.push({
+                applicantId: authData.user._id,
+                name: authData.user.name,
+                username: authData.user.username,
+                email: authData.user.email,
+            });
+            yield event.save();
+            return res.status(200).json({
+                success: true,
+                message: "Applied for event successfully",
+            });
+        }
+        catch (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message,
+            });
         }
     }));
 });
+// exports.applyToEvent = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const token = req.token;
+//   if (!token) {
+//     return res.status(401).json({
+//       success: false,
+//       error: "Unauthorized: Missing token",
+//     });
+//   }
+//   jwt.verify(token, "secretkey", async (err, decoded) => {
+//     if (err) {
+//       return res.status(403).json({
+//         success: false,
+//         error: "Forbidden",
+//       });
+//     } else {
+//       const authData = decoded as AuthData;
+//       try {
+//         let event = await Event.findOne({ _id: req.params.id });
+//         if (!event) {
+//           return res.status(404).json({
+//             success: false,
+//             error: "No event found",
+//           });
+//         }
+//         console.log(event.applicants.applicantId);
+//         event.applicants.forEach((applicant: IApplicant) => {
+//           if (applicant.applicantId == authData.user._id) {
+//             return res.status(405).json({
+//               success: false,
+//               error: "Already applied.",
+//             });
+//           }
+//         });
+//         if (event.organizer.organizerId == authData.user._id) {
+//           return res.status(405).json({
+//             success: false,
+//             error: "You can't apply for your own event.",
+//           });
+//         }
+//         await Event.findByIdAndUpdate(event, {
+//           $push: {
+//             applicants: {
+//               applicantId: authData.user._id,
+//               name: authData.user.name,
+//               username: authData.user.username,
+//               email: authData.user.email,
+//             },
+//           },
+//         });
+//         return res.status(200).json({
+//           success: true,
+//           message: "Applied for event successfully",
+//         });
+//       } catch (err: any) {
+//         return res.status(500).json({
+//           success: false,
+//           error: err.message,
+//         });
+//       }
+//     }
+//   });
+// };
 exports.appliedEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.token;
     if (!token) {
