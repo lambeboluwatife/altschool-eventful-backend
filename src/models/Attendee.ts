@@ -13,10 +13,18 @@ interface IAppliedEvents {
   backdrop: string;
 }
 
+interface IReminder {
+  push(arg0: { eventId: string; reminderTime: any }): unknown;
+  eventId: Schema.Types.ObjectId;
+  reminderTime: Date;
+  sent: boolean;
+}
+
 interface IAttendee extends Document {
   userId: mongoose.Types.ObjectId;
   organizationName: string;
   appliedEvents: IAppliedEvents;
+  reminders: IReminder;
 }
 
 const attendeeSchema = new Schema<IAttendee>({
@@ -37,6 +45,13 @@ const attendeeSchema = new Schema<IAttendee>({
       price: { type: Number },
       capacity: { type: Number },
       backdrop: { type: String },
+    },
+  ],
+  reminders: [
+    {
+      eventId: { type: Schema.Types.ObjectId, ref: "Event" },
+      reminderTime: { type: Date, required: true },
+      sent: { type: Boolean, default: false },
     },
   ],
 });

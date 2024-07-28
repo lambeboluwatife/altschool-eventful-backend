@@ -58,7 +58,6 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     });
                 }
                 const result = yield cloudinaryConfig_1.cloudinary.uploader.upload(req.file.path);
-                // delete file from file directory
                 fs_1.default.unlink(req.file.path, (err) => {
                     if (err) {
                         console.error(err);
@@ -189,7 +188,7 @@ exports.getSingleEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                 if (!event) {
                     return res.status(404).json({
                         success: false,
-                        message: "Event not found.",
+                        message: "No Event Found.",
                     });
                 }
                 return res.status(200).json({
@@ -256,6 +255,57 @@ exports.getEventApplicants = (req, res, next) => __awaiter(void 0, void 0, void 
         }
     }));
 });
+exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.token;
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            error: "Unauthorized: Missing token",
+        });
+    }
+    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden",
+            });
+        }
+        else {
+            const authData = decoded;
+            try {
+                const { reminderTime } = req.body;
+                if (authData.user.role !== "organizer") {
+                    return res.status(403).json({
+                        success: false,
+                        error: "Forbidden - You can't do that!",
+                    });
+                }
+                let event = yield Event_1.default.findOne({
+                    $and: [
+                        { _id: req.params.id },
+                        { "organizer.organizerId": authData.user._id },
+                    ],
+                });
+                if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "No Event Found.",
+                    });
+                }
+                event.reminders.push({ reminderTime });
+                yield event.save();
+                res.status(201).json({ message: "Reminder set successfully" });
+            }
+            catch (err) {
+                return res.status(500).json({
+                    success: false,
+                    message: "Error setting reminder",
+                    error: err.message,
+                });
+            }
+        }
+    }));
+});
 // exports.updateEvent = async (
 //   req: Request,
 //   res: Response,
@@ -290,7 +340,7 @@ exports.getEventApplicants = (req, res, next) => __awaiter(void 0, void 0, void 
 //         if (!event) {
 //           return res.status(404).json({
 //             success: false,
-//             message: "Event not found.",
+//             message: "No Event Found.",
 //           });
 //         }
 //         console.log(updateData);

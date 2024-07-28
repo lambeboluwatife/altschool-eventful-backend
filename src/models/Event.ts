@@ -8,6 +8,7 @@ interface IAuthor {
 }
 
 interface IReminder {
+  push(arg0: { reminderTime: any; }): unknown;
   reminderTime: Date;
   sent: boolean;
 }
