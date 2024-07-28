@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import Event, { IEvent, IAuthor, IApplicant } from "../models/Event";
-import User from "../models/User";
-import Organizer from "../models/Organizer";
+import Event, { IAuthor, IApplicant } from "../models/Event";
 import jwt from "jsonwebtoken";
+import Attendee from "../models/Attendee";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -65,6 +64,17 @@ exports.applyToEvent = async (
         });
       }
 
+      const attendee = await Attendee.findOne({
+        userId: authData.user._id,
+      }).exec();
+
+      if (!attendee) {
+        return res.status(404).json({
+          success: false,
+          message: "Attendee details not found",
+        });
+      }
+
       const alreadyApplied = event.applicants.some(
         (applicant: IApplicant) =>
           applicant.applicantId.toString() === authData.user._id.toString()
@@ -94,6 +104,10 @@ exports.applyToEvent = async (
       });
 
       await event.save();
+
+      await Attendee.findByIdAndUpdate(attendee, {
+        $push: { appliedEvents: event },
+      });
 
       return res.status(200).json({
         success: true,
@@ -150,6 +164,59 @@ exports.appliedEvent = async (
       } catch (err: any) {
         return res.status(500).json({
           success: false,
+          error: err.message,
+        });
+      }
+    }
+  });
+};
+
+exports.setReminder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.token;
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+
+      try {
+        const eventId = req.params.id;
+        const { reminderTime } = req.body;
+
+        let attendee = await Attendee.findOne({
+          userId: authData.user._id,
+        });
+
+        if (!attendee) {
+          return res.status(404).json({
+            success: false,
+            message: "No Attendee Found.",
+          });
+        }
+
+        attendee.reminders.push({ eventId, reminderTime });
+        await attendee.save();
+
+        res.status(201).json({ message: "Reminder set successfully" });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          message: "Error setting reminder",
           error: err.message,
         });
       }

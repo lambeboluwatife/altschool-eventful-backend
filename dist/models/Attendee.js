@@ -44,6 +44,13 @@ const attendeeSchema = new mongoose_1.Schema({
             backdrop: { type: String },
         },
     ],
+    reminders: [
+        {
+            eventId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Event" },
+            reminderTime: { type: Date, required: true },
+            sent: { type: Boolean, default: false },
+        },
+    ],
 });
 const Attendee = mongoose_1.default.model("Attendee", attendeeSchema);
 exports.default = Attendee;

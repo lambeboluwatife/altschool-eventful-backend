@@ -5,7 +5,6 @@ import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-import mongoose from "mongoose";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -63,7 +62,6 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
 
         const result = await cloudinary.uploader.upload(req.file.path);
 
-        // delete file from file directory
         fs.unlink(req.file.path, (err) => {
           if (err) {
             console.error(err);
@@ -230,7 +228,7 @@ exports.getSingleEvent = async (
         if (!event) {
           return res.status(404).json({
             success: false,
-            message: "Event not found.",
+            message: "No Event Found.",
           });
         }
 
@@ -308,6 +306,68 @@ exports.getEventApplicants = async (
   });
 };
 
+exports.setReminder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const token = req.token;
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: "Unauthorized: Missing token",
+    });
+  }
+
+  jwt.verify(token, "secretkey", async (err, decoded) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden",
+      });
+    } else {
+      const authData = decoded as AuthData;
+
+      try {
+        const { reminderTime } = req.body;
+
+        if (authData.user.role !== "organizer") {
+          return res.status(403).json({
+            success: false,
+            error: "Forbidden - You can't do that!",
+          });
+        }
+
+        let event = await Event.findOne({
+          $and: [
+            { _id: req.params.id },
+            { "organizer.organizerId": authData.user._id },
+          ],
+        });
+
+        if (!event) {
+          return res.status(404).json({
+            success: false,
+            message: "No Event Found.",
+          });
+        }
+
+        event.reminders.push({ reminderTime });
+        await event.save();
+
+        res.status(201).json({ message: "Reminder set successfully" });
+      } catch (err: any) {
+        return res.status(500).json({
+          success: false,
+          message: "Error setting reminder",
+          error: err.message,
+        });
+      }
+    }
+  });
+};
+
 // exports.updateEvent = async (
 //   req: Request,
 //   res: Response,
@@ -348,7 +408,7 @@ exports.getEventApplicants = async (
 //         if (!event) {
 //           return res.status(404).json({
 //             success: false,
-//             message: "Event not found.",
+//             message: "No Event Found.",
 //           });
 //         }
 
