@@ -83,7 +83,10 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           createdAt,
         } = req.body;
 
-        const reminder = { reminderTime: reminders, sent: false };
+        const reminder = {
+          reminderTime: reminders,
+          email: authData.user.email,
+        };
 
         const newEvent: IEvent = new Event({
           title,
@@ -353,7 +356,7 @@ exports.setReminder = async (
           });
         }
 
-        event.reminders.push({ reminderTime });
+        event.reminders.push({ reminderTime, email: authData.user.email });
         await event.save();
 
         res.status(201).json({ message: "Reminder set successfully" });

@@ -64,7 +64,10 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     }
                 });
                 const { title, location, category, description, date, time, price, capacity, applicants, ticketsSold, reminders, createdAt, } = req.body;
-                const reminder = { reminderTime: reminders, sent: false };
+                const reminder = {
+                    reminderTime: reminders,
+                    email: authData.user.email,
+                };
                 const newEvent = new Event_1.default({
                     title,
                     location,
@@ -292,7 +295,7 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                         message: "No Event Found.",
                     });
                 }
-                event.reminders.push({ reminderTime });
+                event.reminders.push({ reminderTime, email: authData.user.email });
                 yield event.save();
                 res.status(201).json({ message: "Reminder set successfully" });
             }

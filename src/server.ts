@@ -5,6 +5,7 @@ import morgan from "morgan";
 import passport from "./config/passport";
 import session from "express-session";
 const cors = require("cors");
+import "./cronJobs";
 
 import connectDB from "./config/db";
 

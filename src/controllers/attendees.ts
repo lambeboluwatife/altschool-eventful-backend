@@ -202,6 +202,10 @@ exports.setReminder = async (
           userId: authData.user._id,
         });
 
+        let event = await Event.findOne({
+          _id: eventId,
+        });
+
         if (!attendee) {
           return res.status(404).json({
             success: false,
@@ -209,8 +213,25 @@ exports.setReminder = async (
           });
         }
 
-        attendee.reminders.push({ eventId, reminderTime });
+        if (!event) {
+          return res.status(404).json({
+            success: false,
+            message: "No Event Found.",
+          });
+        }
+
+        attendee.reminders.push({
+          eventId,
+          reminderTime,
+          email: authData.user.email,
+        });
         await attendee.save();
+
+        event.reminders.push({
+          reminderTime,
+          email: authData.user.email,
+        });
+        await event.save();
 
         res.status(201).json({ message: "Reminder set successfully" });
       } catch (err: any) {
