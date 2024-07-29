@@ -25,8 +25,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const reminderSchema = new mongoose_1.Schema({
-    reminderTime: { type: Date, required: true },
+    reminderTime: { type: String, required: true },
     sent: { type: Boolean, default: false },
+    email: { type: String, required: true },
 });
 const eventSchema = new mongoose_1.Schema({
     title: {

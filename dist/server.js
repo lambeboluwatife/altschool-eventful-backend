@@ -10,6 +10,7 @@ const morgan_1 = __importDefault(require("morgan"));
 const passport_1 = __importDefault(require("./config/passport"));
 const express_session_1 = __importDefault(require("express-session"));
 const cors = require("cors");
+require("./cronJobs");
 const db_1 = __importDefault(require("./config/db"));
 dotenv_1.default.config({ path: "./src/config/config.env" });
 (0, db_1.default)();

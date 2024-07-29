@@ -14,9 +14,9 @@ interface IAppliedEvents {
 }
 
 interface IReminder {
-  push(arg0: { eventId: string; reminderTime: any }): unknown;
+  push(arg0: { eventId: string; reminderTime: string; email: string }): unknown;
   eventId: Schema.Types.ObjectId;
-  reminderTime: Date;
+  reminderTime: string;
   sent: boolean;
 }
 
@@ -50,8 +50,9 @@ const attendeeSchema = new Schema<IAttendee>({
   reminders: [
     {
       eventId: { type: Schema.Types.ObjectId, ref: "Event" },
-      reminderTime: { type: Date, required: true },
+      reminderTime: { type: String, required: true },
       sent: { type: Boolean, default: false },
+      email: { type: String, required: true },
     },
   ],
 });

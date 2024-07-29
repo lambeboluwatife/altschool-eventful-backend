@@ -8,13 +8,19 @@ interface IAuthor {
 }
 
 interface IReminder {
-  push(arg0: { reminderTime: any; }): unknown;
-  reminderTime: Date;
+  push(arg0: { reminderTime: string; email: string }): unknown;
+  reminderTime: string;
   sent: boolean;
+  email: string;
 }
 
 interface IApplicant {
-  push(arg0: { applicantId: any; name: any; username: any; email: string; }): unknown;
+  push(arg0: {
+    applicantId: any;
+    name: any;
+    username: any;
+    email: string;
+  }): unknown;
   some(arg0: (applicant: IApplicant) => boolean): unknown;
   applicantId: Schema.Types.ObjectId;
   name: string;
@@ -40,8 +46,9 @@ interface IEvent extends Document {
 }
 
 const reminderSchema = new Schema({
-  reminderTime: { type: Date, required: true },
+  reminderTime: { type: String, required: true },
   sent: { type: Boolean, default: false },
+  email: { type: String, required: true },
 });
 
 const eventSchema = new Schema<IEvent>({

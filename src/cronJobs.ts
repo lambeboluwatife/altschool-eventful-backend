@@ -1,27 +1,27 @@
-// import cron from "node-cron";
-// import Event, { IEvent } from "./models/Event";
-// import { sendReminder } from "./utils/sendReminders"; // Import your function to send reminders
+import cron from "node-cron";
+import Event, { IEvent } from "./models/Event";
+import { sendReminder } from "./utils/sendReminders";
+import moment from "moment";
 
-// // Function to check events and send reminders
-// const checkEventsForReminders = async () => {
-//   const now = new Date();
-//   const upcomingEvents = await Event.find({
-//     reminderTime: { $lte: now },
-//     sent: false,
-//   });
+// Function to check events and send reminders
+const checkEventsForReminders = async () => {
+  const today = new Date();
+  const upcomingEvents = await Event.find({
+    reminderTime: { $lte: moment(today).format("DD/MM/YYYY") },
+    sent: false,
+  });
 
-//   for (const event of upcomingEvents) {
-//     // Logic to send reminder
-//     await sendReminder(event: IEvent);
+  for (const event of upcomingEvents) {
+    const eventToSend = event as IEvent;
+    console.log(eventToSend);
+    await sendReminder(eventToSend);
 
-//     // Mark the reminder as sent
-//     event.sent = true;
-//     await event.save();
-//   }
-// };
+    event.reminders.sent = true;
+    await event.save();
+  }
+};
 
-// // Schedule the job to run every minute
-// cron.schedule("* * * * *", () => {
-//   console.log("Running a task every minute");
-//   checkEventsForReminders();
-// });
+cron.schedule("* * * * *", () => {
+  console.log("Running a task every minute");
+  checkEventsForReminders();
+});

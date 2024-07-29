@@ -47,8 +47,9 @@ const attendeeSchema = new mongoose_1.Schema({
     reminders: [
         {
             eventId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Event" },
-            reminderTime: { type: Date, required: true },
+            reminderTime: { type: String, required: true },
             sent: { type: Boolean, default: false },
+            email: { type: String, required: true },
         },
     ],
 });

@@ -164,14 +164,32 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 let attendee = yield Attendee_1.default.findOne({
                     userId: authData.user._id,
                 });
+                let event = yield Event_1.default.findOne({
+                    _id: eventId,
+                });
                 if (!attendee) {
                     return res.status(404).json({
                         success: false,
                         message: "No Attendee Found.",
                     });
                 }
-                attendee.reminders.push({ eventId, reminderTime });
+                if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "No Event Found.",
+                    });
+                }
+                attendee.reminders.push({
+                    eventId,
+                    reminderTime,
+                    email: authData.user.email,
+                });
                 yield attendee.save();
+                event.reminders.push({
+                    reminderTime,
+                    email: authData.user.email,
+                });
+                yield event.save();
                 res.status(201).json({ message: "Reminder set successfully" });
             }
             catch (err) {
