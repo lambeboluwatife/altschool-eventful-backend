@@ -119,4 +119,4 @@ const eventSchema = new Schema<IEvent>({
 const Event = mongoose.model<IEvent>("Event", eventSchema);
 
 export default Event;
-export { IEvent, IAuthor, IApplicant };
+export { IEvent, IAuthor, IApplicant, IReminder };

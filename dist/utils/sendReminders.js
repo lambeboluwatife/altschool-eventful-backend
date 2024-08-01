@@ -16,7 +16,7 @@ exports.sendReminder = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
 dotenv_1.default.config({ path: "./src/config/config.env" });
-const sendReminder = (event) => __awaiter(void 0, void 0, void 0, function* () {
+const sendReminder = (reminder, event) => __awaiter(void 0, void 0, void 0, function* () {
     const transporter = nodemailer_1.default.createTransport({
         service: "gmail",
         auth: {
@@ -24,15 +24,14 @@ const sendReminder = (event) => __awaiter(void 0, void 0, void 0, function* () {
             pass: process.env.EMAIL_PASSWORD,
         },
     });
-    console.log(process.env.EMAIL_USER, process.env.EMAIL_PASSWORD);
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: event.reminders.email,
+        to: reminder.email,
         subject: "Event Reminder",
         text: `This is a reminder for your event: ${event.title}`,
     };
     console.log(mailOptions);
-    yield transporter.sendMail(mailOptions, (error, info) => {
+    transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.log(error);
         }
