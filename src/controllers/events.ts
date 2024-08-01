@@ -100,6 +100,7 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           backdrop: result.secure_url,
           applicants: [],
           ticketsSold,
+          tickets: [],
           reminders: reminder,
           createdAt,
           organizer: {

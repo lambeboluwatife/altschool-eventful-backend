@@ -52,6 +52,16 @@ const attendeeSchema = new mongoose_1.Schema({
             email: { type: String, required: true },
         },
     ],
+    tickets: [
+        {
+            eventId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Event", required: true },
+            attendeeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+            purchaseDate: { type: Date, default: Date.now },
+            qrCode: { type: String, required: true },
+            used: { type: Boolean, default: false },
+            price: { type: Number, required: true },
+        },
+    ],
 });
 const Attendee = mongoose_1.default.model("Attendee", attendeeSchema);
 exports.default = Attendee;

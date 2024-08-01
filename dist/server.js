@@ -15,26 +15,6 @@ const db_1 = __importDefault(require("./config/db"));
 dotenv_1.default.config({ path: "./src/config/config.env" });
 (0, db_1.default)();
 const app = (0, express_1.default)();
-// app.use(
-//   cors({
-//     origin:
-//       process.env.NODE_ENV === "development"
-//         ? process.env.DEV_ORIGIN
-//         : process.env.PROD_ORIGIN,
-//     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"],
-//     allowedHeaders: [
-//       "Content-Type",
-//       "Origin",
-//       "X-Requested-With",
-//       "Accept",
-//       "x-client-key",
-//       "x-client-token",
-//       "x-client-secret",
-//       "Authorization",
-//     ],
-//     credentials: true,
-//   })
-// );
 const corsOptions = {
     origin: process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
@@ -45,22 +25,6 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 app.use(express_1.default.json());
-// const devOrigin = process.env.DEV_ORIGIN;
-// const prodOrigin = process.env.PROD_ORIGIN;
-// const allowedOrigins: string[] = [devOrigin!, prodOrigin!];
-// const corsOptions: CorsOptions = {
-//   origin: (
-//     origin: string | undefined,
-//     callback: (err: Error | null, allow?: boolean) => void
-//   ) => {
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-// };
-// app.use(cors(corsOptions));
 // Express Session
 app.use((0, express_session_1.default)({
     secret: "secret",
@@ -73,11 +37,12 @@ app.use(passport_1.default.session());
 const users = require("./routes/users");
 const events = require("./routes/events");
 const attendees = require("./routes/attendees");
+const tickets = require("./routes/tickets");
 app.get("/", (req, res) => {
     res.send("hello, welcome to eventful");
 });
 app.use("/users", users);
-app.use("/events", events, attendees);
+app.use("/events", events, attendees, tickets);
 if (process.env.NODE_ENV === "development") {
     app.use((0, morgan_1.default)("dev"));
 }

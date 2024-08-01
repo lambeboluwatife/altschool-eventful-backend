@@ -80,6 +80,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                     backdrop: result.secure_url,
                     applicants: [],
                     ticketsSold,
+                    tickets: [],
                     reminders: reminder,
                     createdAt,
                     organizer: {
