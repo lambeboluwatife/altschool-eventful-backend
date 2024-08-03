@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { ITicket } from "./Ticket";
 
 interface IAppliedEvents {
   eventId: Schema.Types.ObjectId;
@@ -25,6 +26,7 @@ interface IAttendee extends Document {
   organizationName: string;
   appliedEvents: IAppliedEvents;
   reminders: IReminder;
+  tickets: ITicket;
 }
 
 const attendeeSchema = new Schema<IAttendee>({
@@ -53,6 +55,17 @@ const attendeeSchema = new Schema<IAttendee>({
       reminderTime: { type: String, required: true },
       sent: { type: Boolean, default: false },
       email: { type: String, required: true },
+    },
+  ],
+  tickets: [
+    {
+      eventId: { type: Schema.Types.ObjectId, ref: "Event", required: true },
+      attendeeId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+      purchaseDate: { type: Date, default: Date.now },
+      qrCode: { type: String, required: true },
+      token: { type: String, required: true },
+      used: { type: Boolean, default: false },
+      price: { type: Number, required: true },
     },
   ],
 });

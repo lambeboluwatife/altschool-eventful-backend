@@ -29,6 +29,14 @@ const reminderSchema = new mongoose_1.Schema({
     sent: { type: Boolean, default: false },
     email: { type: String, required: true },
 });
+const ticketSchema = new mongoose_1.Schema({
+    eventId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Event", required: true },
+    attendeeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+    purchaseDate: { type: Date, default: Date.now },
+    qrCode: { type: String, required: true },
+    used: { type: Boolean, default: false },
+    price: { type: Number, required: true },
+});
 const eventSchema = new mongoose_1.Schema({
     title: {
         type: String,
@@ -79,6 +87,7 @@ const eventSchema = new mongoose_1.Schema({
         },
     ],
     ticketsSold: { type: Number, default: 0 },
+    tickets: [ticketSchema],
     reminders: [reminderSchema],
     createdAt: {
         type: Date,

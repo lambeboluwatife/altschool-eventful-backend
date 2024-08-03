@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { ITicket } from "./Ticket";
 
 interface IAuthor {
   [x: string]: any;
@@ -40,6 +41,7 @@ interface IEvent extends Document {
   backdrop: string;
   applicants: IApplicant;
   ticketsSold: number;
+  tickets: ITicket;
   reminders: IReminder;
   createdAt: Date;
   organizer: IAuthor;
@@ -49,6 +51,16 @@ const reminderSchema = new Schema({
   reminderTime: { type: String, required: true },
   sent: { type: Boolean, default: false },
   email: { type: String, required: true },
+});
+
+const ticketSchema = new Schema({
+  eventId: { type: Schema.Types.ObjectId, ref: "Event", required: true },
+  attendeeId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  purchaseDate: { type: Date, default: Date.now },
+  qrCode: { type: String, required: true },
+  token: { type: String, required: true },
+  used: { type: Boolean, default: false },
+  price: { type: Number, required: true },
 });
 
 const eventSchema = new Schema<IEvent>({
@@ -101,6 +113,7 @@ const eventSchema = new Schema<IEvent>({
     },
   ],
   ticketsSold: { type: Number, default: 0 },
+  tickets: [ticketSchema],
   reminders: [reminderSchema],
   createdAt: {
     type: Date,
