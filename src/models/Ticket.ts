@@ -2,8 +2,8 @@ import mongoose, { Document, Schema } from "mongoose";
 
 interface ITicket extends Document {
   push(arg0: {
-    eventId: unknown;
-    attendeeId: any;
+    eventId: string;
+    attendeeId: string;
     qrCode: string;
     token: string;
     price: number;

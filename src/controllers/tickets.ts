@@ -86,8 +86,6 @@ exports.generateTicket = async (
           price: event.price,
         });
 
-        console.log("New Ticket:", newTicket);
-
         const ticket = await newTicket.save();
 
         attendee.tickets.push(ticket);
@@ -162,8 +160,7 @@ exports.scanTicket = async (
           });
         }
 
-        const { eventId, attendeeId, userId } = decodedToken;
-        console.log(eventId, attendeeId, userId);
+        const { eventId, userId } = decodedToken;
 
         let event = await Event.findOne({
           $and: [
@@ -179,7 +176,7 @@ exports.scanTicket = async (
           });
         }
 
-        if (event.organizer.organizerId !== authData.user._id) {
+        if (event.organizer.organizerId.toString() !== authData.user._id.toString()) {
           return res.status(400).json({
             success: false,
             message: "Ticket not for this event.",
@@ -188,8 +185,7 @@ exports.scanTicket = async (
 
         const ticket: ITicket | null = await Ticket.findOne({
           eventId,
-          attendeeId,
-          userId,
+          attendeeId: userId,
           qrCode,
         });
 
