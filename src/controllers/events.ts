@@ -77,7 +77,6 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           time,
           price,
           capacity,
-          applicants,
           ticketsSold,
           reminders,
           createdAt,
