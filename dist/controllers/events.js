@@ -63,7 +63,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                         console.error(err);
                     }
                 });
-                const { title, location, category, description, date, time, price, capacity, applicants, ticketsSold, reminders, createdAt, } = req.body;
+                const { title, location, category, description, date, time, price, capacity, ticketsSold, reminders, createdAt, } = req.body;
                 const reminder = {
                     reminderTime: reminders,
                     email: authData.user.email,

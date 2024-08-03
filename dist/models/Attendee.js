@@ -58,6 +58,7 @@ const attendeeSchema = new mongoose_1.Schema({
             attendeeId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
             purchaseDate: { type: Date, default: Date.now },
             qrCode: { type: String, required: true },
+            token: { type: String, required: true },
             used: { type: Boolean, default: false },
             price: { type: Number, required: true },
         },

@@ -18,7 +18,7 @@ const app = (0, express_1.default)();
 const corsOptions = {
     origin: process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
-        : "https://your-production-domain.com",
+        : "https://altschool-eventful-backend.onrender.com",
     credentials: true,
     methods: "GET,POST,OPTIONS",
     allowedHeaders: "Origin,Content-Type,Accept",
