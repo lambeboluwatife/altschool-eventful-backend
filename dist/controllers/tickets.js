@@ -66,7 +66,6 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                     token,
                     price: event.price,
                 });
-                console.log("New Ticket:", newTicket);
                 const ticket = yield newTicket.save();
                 attendee.tickets.push(ticket);
                 yield attendee.save();
@@ -123,8 +122,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         message: "Invalid QR code",
                     });
                 }
-                const { eventId, attendeeId, userId } = decodedToken;
-                console.log(eventId, attendeeId, userId);
+                const { eventId, userId } = decodedToken;
                 let event = yield Event_1.default.findOne({
                     $and: [
                         { _id: eventId },
@@ -137,7 +135,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         message: "No event found.",
                     });
                 }
-                if (event.organizer.organizerId !== authData.user._id) {
+                if (event.organizer.organizerId.toString() !== authData.user._id.toString()) {
                     return res.status(400).json({
                         success: false,
                         message: "Ticket not for this event.",
@@ -145,8 +143,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                 }
                 const ticket = yield Ticket_1.default.findOne({
                     eventId,
-                    attendeeId,
-                    userId,
+                    attendeeId: userId,
                     qrCode,
                 });
                 if (!ticket) {
