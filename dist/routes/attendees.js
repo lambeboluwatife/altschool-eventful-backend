@@ -7,5 +7,5 @@ const { getEvents, applyToEvent, appliedEvent, setReminder, } = require("../cont
 router.route("/").get(getEvents);
 router.route("/:id/apply").post(verifyToken, applyToEvent);
 router.route("/applied").get(verifyToken, appliedEvent);
-router.route("/:id/attendee/reminder").post(verifyToken, setReminder);
+router.route("/:id/reminder").post(verifyToken, setReminder);
 module.exports = router;

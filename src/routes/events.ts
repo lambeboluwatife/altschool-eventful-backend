@@ -5,19 +5,15 @@ import { upload } from "../config/multerConfig";
 const { verifyToken } = require("../middlewares/jwt");
 
 const {
+  getEvents,
+  searchEvents,
   addEvent,
-  getCreatedEvents,
-  getSingleEvent,
-  getEventApplicants,
-  setReminder,
   deleteEvent,
 } = require("../controllers/events");
 
-router.route("/").post(verifyToken, upload.single("backdrop"), addEvent);
-router.route("/created").get(verifyToken, getCreatedEvents);
-router.route("/created/:id").get(verifyToken, getSingleEvent);
-router.route("/:id/applicants").get(verifyToken, getEventApplicants);
-router.route("/:id/organizer/reminder").post(verifyToken, setReminder);
-router.route("/:id").delete(verifyToken, deleteEvent);
+router.route("/").get(getEvents);
+router.route("/search-events").post(searchEvents);
+router.route("/create-event").post(verifyToken, upload.single("backdrop"), addEvent);
+router.route("/:id/delete").delete(verifyToken, deleteEvent);
 
 module.exports = router;
