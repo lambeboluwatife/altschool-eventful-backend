@@ -30,7 +30,7 @@ const TicketSchema = new mongoose_1.Schema({
     purchaseDate: { type: Date, default: Date.now },
     qrCode: { type: String, required: true },
     token: { type: String, required: true },
-    used: { type: Boolean, default: false },
+    scanned: { type: Boolean, default: false },
     price: { type: Number, required: true },
 });
 const Ticket = mongoose_1.default.model("Ticket", TicketSchema);

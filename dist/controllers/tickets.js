@@ -48,6 +48,12 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                     error: "No event found",
                 });
             }
+            if (event.ticketsSold === event.capacity) {
+                return res.status(410).json({
+                    success: false,
+                    error: "This event is sold out.",
+                });
+            }
             const ticketId = "ticket_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
             const userId = authData.user._id;
             const eventId = event._id;
@@ -129,7 +135,14 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         { "organizer.organizerId": authData.user._id },
                     ],
                 });
+                let eventTicket = yield Event_1.default.findOne({ _id: eventId });
                 if (!event) {
+                    return res.status(404).json({
+                        success: false,
+                        message: "No event found.",
+                    });
+                }
+                if (!eventTicket) {
                     return res.status(404).json({
                         success: false,
                         message: "No event found.",
@@ -152,18 +165,25 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         message: "Ticket not found",
                     });
                 }
-                if (ticket.used) {
+                if (ticket.scanned) {
                     return res.status(400).json({
                         success: false,
-                        message: "Ticket has already been used",
+                        message: "Ticket has already been scanned",
                     });
                 }
-                ticket.used = true;
+                ticket.scanned = true;
                 yield ticket.save();
+                const updateEventTicket = eventTicket.tickets.find((ticket) => ticket._id === ticket._id);
+                if (updateEventTicket) {
+                    updateEventTicket.scanned = true;
+                    yield eventTicket.save();
+                }
+                else {
+                    console.error("Ticket not found");
+                }
                 return res.status(200).json({
                     success: true,
                     message: "Ticket verified successfully",
-                    data: ticket,
                 });
             }
             catch (err) {

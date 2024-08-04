@@ -16,6 +16,7 @@ interface IReminder {
 }
 
 interface IApplicant {
+  length: number;
   push(arg0: {
     applicantId: any;
     name: any;

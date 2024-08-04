@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 interface ITicket extends Document {
+  filter(arg0: (ticket: { scanned: any; }) => any): number;
+  find(arg0: (event: ITicket) => boolean): ITicket | undefined;
   push(arg0: {
     eventId: string;
     attendeeId: string;
@@ -13,7 +15,7 @@ interface ITicket extends Document {
   purchaseDate: Date;
   qrCode: string;
   token: string;
-  used: boolean;
+  scanned: boolean;
   price: number;
 }
 
@@ -23,7 +25,7 @@ const TicketSchema: Schema = new Schema({
   purchaseDate: { type: Date, default: Date.now },
   qrCode: { type: String, required: true },
   token: { type: String, required: true },
-  used: { type: Boolean, default: false },
+  scanned: { type: Boolean, default: false },
   price: { type: Number, required: true },
 });
 

@@ -10,8 +10,8 @@ const {
   setReminder,
 } = require("../controllers/organizers");
 
-router.route("/created").get(verifyToken, getCreatedEvents);
-router.route("/created/:id").get(verifyToken, getSingleEvent);
+router.route("/").get(verifyToken, getCreatedEvents);
+router.route("/:id").get(verifyToken, getSingleEvent);
 router.route("/:id/applicants").get(verifyToken, getEventApplicants);
 router.route("/:id/reminder").post(verifyToken, setReminder);
 
