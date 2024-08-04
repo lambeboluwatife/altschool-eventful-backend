@@ -38,11 +38,15 @@ const users = require("./routes/users");
 const events = require("./routes/events");
 const attendees = require("./routes/attendees");
 const tickets = require("./routes/tickets");
+const organizers = require("./routes/organizers");
 app.get("/", (req, res) => {
     res.send("hello, welcome to eventful");
 });
-app.use("/users", users);
-app.use("/events", events, attendees, tickets);
+app.use("/api/auth", users);
+app.use("/api/events", events);
+app.use("/api/attendee", attendees);
+app.use("/api/organizer", organizers);
+app.use("/api/tickets", tickets);
 if (process.env.NODE_ENV === "development") {
     app.use((0, morgan_1.default)("dev"));
 }
