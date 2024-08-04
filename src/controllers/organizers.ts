@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import Event, { IEvent, IAuthor, IApplicant } from "../models/Event";
-import User from "../models/User";
-import Organizer from "../models/Organizer";
 import jwt from "jsonwebtoken";
 
 declare module "express-serve-static-core" {

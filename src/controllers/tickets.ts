@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import Ticket, { ITicket } from "../models/Ticket";
-import Event, { IAuthor, IEvent } from "../models/Event";
+import Event, { IAuthor } from "../models/Event";
 import jwt from "jsonwebtoken";
 import QRCode from "qrcode";
-import Attendee, { IAttendee } from "../models/Attendee";
+import Attendee from "../models/Attendee";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -60,6 +60,14 @@ exports.generateTicket = async (
         return res.status(404).json({
           success: false,
           error: "No event found",
+        });
+      }
+
+      
+      if (event.ticketsSold === event.capacity) {
+        return res.status(410).json({
+          success: false,
+          error: "This event is sold out.",
         });
       }
 
@@ -169,7 +177,16 @@ exports.scanTicket = async (
           ],
         });
 
+        let eventTicket = await Event.findOne({_id: eventId})
+
         if (!event) {
+          return res.status(404).json({
+            success: false,
+            message: "No event found.",
+          });
+        }
+
+        if (!eventTicket) {
           return res.status(404).json({
             success: false,
             message: "No event found.",
@@ -196,20 +213,28 @@ exports.scanTicket = async (
           });
         }
 
-        if (ticket.used) {
+        if (ticket.scanned) {
           return res.status(400).json({
             success: false,
-            message: "Ticket has already been used",
+            message: "Ticket has already been scanned",
           });
         }
 
-        ticket.used = true;
+        ticket.scanned = true;
         await ticket.save();
+
+        const updateEventTicket: ITicket | undefined = eventTicket.tickets.find((ticket: ITicket) => ticket._id === ticket._id);
+
+        if (updateEventTicket) {
+          updateEventTicket.scanned = true;
+          await eventTicket.save();
+        } else {
+          console.error("Ticket not found");
+        }
 
         return res.status(200).json({
           success: true,
           message: "Ticket verified successfully",
-          data: ticket,
         });
       } catch (err: any) {
         return res.status(500).json({
