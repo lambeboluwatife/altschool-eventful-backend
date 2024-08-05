@@ -51,7 +51,7 @@ export const getOverallAnalytics = async (req: Request, res: Response, next: Nex
           const totalApplicants = events.reduce((acc, event) => acc + event.applicants.length, 0);
           const totalTicketSold = events.reduce((acc, event) => acc + event.ticketsSold, 0);
           const totalScannedTickets = events.reduce((acc, event) => {
-            return acc + event.tickets.filter((ticket: { scanned: any; }) => ticket.scanned);
+            return acc + event.tickets.filter((ticket: { scanned: boolean; }) => ticket.scanned);
           }, 0);
 
           // const totalScannedTickets = events.tickets.filter((ticket: { scanned: boolean; }) => ticket.scanned)
@@ -61,9 +61,11 @@ export const getOverallAnalytics = async (req: Request, res: Response, next: Nex
 
         res.status(200).json({
           success: true,
-          totalApplicants: totalApplicants,
-          totalTicketSold: totalTicketSold,
-          totalScannedTickets: totalScannedTickets
+          data: {
+            totalApplicants,
+            totalTicketSold,
+            totalScannedTickets
+          }
         });
       } catch (err: any) {
         return res.status(500).json({
@@ -106,8 +108,7 @@ export const getOverallAnalytics = async (req: Request, res: Response, next: Nex
           });
         }
   
-        // Ensure the event belongs to the organizer
-        if (event.organizer.toString() !== organizerId) {
+        if (event.organizer.organizerId.toString() !== organizerId) {
           return res.status(403).json({
             success: false,
             error: 'Forbidden - You do not have access to this event',
