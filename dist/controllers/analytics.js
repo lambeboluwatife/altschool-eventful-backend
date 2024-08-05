@@ -51,9 +51,11 @@ const getOverallAnalytics = (req, res, next) => __awaiter(void 0, void 0, void 0
             // const totalScannedTickets = events.tickets.filter((ticket: { scanned: boolean; }) => ticket.scanned)
             res.status(200).json({
                 success: true,
-                totalApplicants: totalApplicants,
-                totalTicketSold: totalTicketSold,
-                totalScannedTickets: totalScannedTickets
+                data: {
+                    totalApplicants,
+                    totalTicketSold,
+                    totalScannedTickets
+                }
             });
         }
         catch (err) {
@@ -91,8 +93,7 @@ const getEventAnalytics = (req, res, next) => __awaiter(void 0, void 0, void 0, 
                     error: 'No event found',
                 });
             }
-            // Ensure the event belongs to the organizer
-            if (event.organizer.toString() !== organizerId) {
+            if (event.organizer.organizerId.toString() !== organizerId) {
                 return res.status(403).json({
                     success: false,
                     error: 'Forbidden - You do not have access to this event',
