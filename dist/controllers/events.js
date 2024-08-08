@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,13 +9,33 @@ const Organizer_1 = __importDefault(require("../models/Organizer"));
 const cloudinaryConfig_1 = require("../config/cloudinaryConfig");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
-exports.getEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const node_cache_1 = __importDefault(require("node-cache"));
+const myCache = new node_cache_1.default();
+exports.getEvents = async (req, res, next) => {
     try {
-        const events = yield Event_1.default.find();
+        const cachedEvents = myCache.mget(myCache.keys());
+        if (Object.keys(cachedEvents).length > 0) {
+            return res.status(200).json({
+                success: true,
+                count: Object.keys(cachedEvents).length,
+                data: Object.values(cachedEvents),
+                message: "This is from cache",
+            });
+        }
+        const events = await Event_1.default.find();
+        if (events.length > 0) {
+            const eventsToCache = events.map((event) => ({
+                key: event._id.toString(),
+                val: event.toObject(),
+                ttl: 1800,
+            }));
+            myCache.mset(eventsToCache);
+        }
         return res.status(200).json({
             success: true,
             count: events.length,
             data: events.length === 0 ? "No Events" : events,
+            message: "This is from the database",
         });
     }
     catch (err) {
@@ -33,12 +44,12 @@ exports.getEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             error: "Server Error",
         });
     }
-});
-exports.searchEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+};
+exports.searchEvents = async (req, res, next) => {
     const { search } = req.body;
     const newSearch = new RegExp(search, "i");
     try {
-        const events = yield Event_1.default.find({
+        const events = await Event_1.default.find({
             $or: [
                 { title: newSearch },
                 { location: newSearch },
@@ -58,8 +69,8 @@ exports.searchEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             error: "Server Error",
         });
     }
-});
-exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+};
+exports.addEvent = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -67,7 +78,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -77,13 +88,13 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
         else {
             const authData = decoded;
             try {
-                const user = yield User_1.default.findById(authData.user._id).exec();
+                const user = await User_1.default.findById(authData.user._id).exec();
                 if (!user || user.role !== "organizer") {
                     return res.status(403).json({
                         message: "Access denied. Only organizers can perform this action.",
                     });
                 }
-                const organizer = yield Organizer_1.default.findOne({
+                const organizer = await Organizer_1.default.findOne({
                     userId: authData.user._id,
                 }).exec();
                 if (!organizer) {
@@ -98,7 +109,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                         message: "No file uploaded",
                     });
                 }
-                const result = yield cloudinaryConfig_1.cloudinary.uploader.upload(req.file.path);
+                const result = await cloudinaryConfig_1.cloudinary.uploader.upload(req.file.path);
                 fs_1.default.unlink(req.file.path, (err) => {
                     if (err) {
                         console.error(err);
@@ -130,8 +141,8 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                         email: authData.user.email,
                     },
                 });
-                const event = yield newEvent.save();
-                yield Organizer_1.default.findByIdAndUpdate(organizer, {
+                const event = await newEvent.save();
+                await Organizer_1.default.findByIdAndUpdate(organizer, {
                     $push: { createdEvents: event },
                 });
                 return res.status(201).json({
@@ -155,8 +166,8 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
                 }
             }
         }
-    }));
-});
+    });
+};
 // exports.updateEvent = async (
 //   req: Request,
 //   res: Response,
@@ -212,7 +223,7 @@ exports.addEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
 //     }
 //   });
 // };
-exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteEvent = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -220,7 +231,7 @@ exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -236,7 +247,7 @@ exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 });
             }
             try {
-                let event = yield Event_1.default.findOne({
+                let event = await Event_1.default.findOne({
                     $and: [
                         { _id: req.params.id },
                         { "organizer.organizerId": authData.user._id },
@@ -248,7 +259,7 @@ exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                         error: "No event found",
                     });
                 }
-                yield event.deleteOne();
+                await event.deleteOne();
                 return res.status(200).json({
                     success: true,
                     data: {},
@@ -261,5 +272,5 @@ exports.deleteEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 });
             }
         }
-    }));
-});
+    });
+};

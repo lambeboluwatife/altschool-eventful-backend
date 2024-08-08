@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,7 +9,7 @@ const Organizer_1 = __importDefault(require("../models/Organizer"));
 const Attendee_1 = __importDefault(require("../models/Attendee"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const passport_1 = __importDefault(require("passport"));
-exports.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.registerUser = async (req, res, next) => {
     try {
         const { name, username, email, role, organizationName, password, verifyPassword, } = req.body;
         if (!name) {
@@ -90,13 +81,13 @@ exports.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                     password,
                 });
                 // Mash Password
-                bcryptjs_1.default.genSalt(10, (err, salt) => bcryptjs_1.default.hash(newUser.password, salt, (err, hash) => __awaiter(void 0, void 0, void 0, function* () {
+                bcryptjs_1.default.genSalt(10, (err, salt) => bcryptjs_1.default.hash(newUser.password, salt, async (err, hash) => {
                     if (err)
                         throw err;
                     // Set password to hashed
                     newUser.password = hash;
                     // Save user
-                    const savedUser = yield newUser.save();
+                    const savedUser = await newUser.save();
                     if (role === "organizer") {
                         // Create the organizer entry
                         const newOrganizer = new Organizer_1.default({
@@ -104,7 +95,7 @@ exports.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                             organizationName,
                             createdEvents: [],
                         });
-                        const savedOrganizer = yield newOrganizer.save();
+                        const savedOrganizer = await newOrganizer.save();
                         res.status(201).json({
                             message: "Organizer registered successfully",
                             userId: savedUser._id,
@@ -117,14 +108,14 @@ exports.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                             userId: savedUser._id,
                             appliedEvents: [],
                         });
-                        const savedAttendee = yield newAttendee.save();
+                        const savedAttendee = await newAttendee.save();
                         res.status(201).json({
                             message: "Attendee registered successfully",
                             userId: savedUser._id,
                             attendeeId: savedAttendee._id,
                         });
                     }
-                })));
+                }));
             }
         });
     }
@@ -143,8 +134,8 @@ exports.registerUser = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             });
         }
     }
-});
-exports.loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+};
+exports.loginUser = async (req, res, next) => {
     passport_1.default.authenticate("local", (err, user, info) => {
         if (err) {
             return res.status(500).json({
@@ -168,13 +159,13 @@ exports.loginUser = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             next();
         });
     })(req, res, next);
-});
-const logoutUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+};
+const logoutUser = async (req, res, next) => {
     req.logout((err) => {
         if (err) {
             return next(err);
         }
         res.redirect("/");
     });
-});
+};
 exports.logoutUser = logoutUser;

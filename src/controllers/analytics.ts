@@ -54,11 +54,6 @@ export const getOverallAnalytics = async (req: Request, res: Response, next: Nex
             return acc + event.tickets.filter((ticket: { scanned: boolean; }) => ticket.scanned);
           }, 0);
 
-          // const totalScannedTickets = events.tickets.filter((ticket: { scanned: boolean; }) => ticket.scanned)
-
-
-          
-
         res.status(200).json({
           success: true,
           data: {

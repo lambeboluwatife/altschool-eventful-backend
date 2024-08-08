@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, ObjectId } from "mongoose";
 import { ITicket } from "./Ticket";
 
 interface IAuthor {
@@ -31,6 +31,7 @@ interface IApplicant {
 }
 
 interface IEvent extends Document {
+  _id: ObjectId;
   title: string;
   location: string;
   category: string;

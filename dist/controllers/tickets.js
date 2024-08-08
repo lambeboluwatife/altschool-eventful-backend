@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -17,7 +8,7 @@ const Event_1 = __importDefault(require("../models/Event"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const qrcode_1 = __importDefault(require("qrcode"));
 const Attendee_1 = __importDefault(require("../models/Attendee"));
-exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.generateTicket = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -25,7 +16,7 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -34,8 +25,8 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         }
         const authData = decoded;
         try {
-            const event = yield Event_1.default.findById(req.params.id);
-            const attendee = yield Attendee_1.default.findOne({ userId: authData.user._id });
+            const event = await Event_1.default.findById(req.params.id);
+            const attendee = await Attendee_1.default.findOne({ userId: authData.user._id });
             if (!attendee) {
                 return res.status(404).json({
                     success: false,
@@ -59,7 +50,7 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
             const eventId = event._id;
             const qrData = { eventId, ticketId, userId };
             const token = jsonwebtoken_1.default.sign(qrData, "secretkey");
-            qrcode_1.default.toDataURL(token, (err, url) => __awaiter(void 0, void 0, void 0, function* () {
+            qrcode_1.default.toDataURL(token, async (err, url) => {
                 if (err) {
                     return res
                         .status(500)
@@ -72,14 +63,14 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                     token,
                     price: event.price,
                 });
-                const ticket = yield newTicket.save();
+                const ticket = await newTicket.save();
                 attendee.tickets.push(ticket);
-                yield attendee.save();
+                await attendee.save();
                 event.tickets.push(ticket);
                 event.ticketsSold += 1;
-                yield event.save();
+                await event.save();
                 res.status(200).json({ ticketId, qrCode: url });
-            }));
+            });
         }
         catch (err) {
             return res.status(500).json({
@@ -87,9 +78,9 @@ exports.generateTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                 error: err.message,
             });
         }
-    }));
-});
-exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    });
+};
+exports.scanTicket = async (req, res, next) => {
     const { qrCode } = req.body;
     const token = req.token;
     if (!token) {
@@ -98,7 +89,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -114,7 +105,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         error: "Forbidden - You can't do that!",
                     });
                 }
-                let ticketToken = yield Ticket_1.default.findOne({ qrCode });
+                let ticketToken = await Ticket_1.default.findOne({ qrCode });
                 if (!ticketToken) {
                     return res.status(404).json({
                         success: false,
@@ -129,13 +120,13 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                     });
                 }
                 const { eventId, userId } = decodedToken;
-                let event = yield Event_1.default.findOne({
+                let event = await Event_1.default.findOne({
                     $and: [
                         { _id: eventId },
                         { "organizer.organizerId": authData.user._id },
                     ],
                 });
-                let eventTicket = yield Event_1.default.findOne({ _id: eventId });
+                let eventTicket = await Event_1.default.findOne({ _id: eventId });
                 if (!event) {
                     return res.status(404).json({
                         success: false,
@@ -154,7 +145,7 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                         message: "Ticket not for this event.",
                     });
                 }
-                const ticket = yield Ticket_1.default.findOne({
+                const ticket = await Ticket_1.default.findOne({
                     eventId,
                     attendeeId: userId,
                     qrCode,
@@ -172,11 +163,11 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                     });
                 }
                 ticket.scanned = true;
-                yield ticket.save();
+                await ticket.save();
                 const updateEventTicket = eventTicket.tickets.find((ticket) => ticket._id === ticket._id);
                 if (updateEventTicket) {
                     updateEventTicket.scanned = true;
-                    yield eventTicket.save();
+                    await eventTicket.save();
                 }
                 else {
                     console.error("Ticket not found");
@@ -193,5 +184,5 @@ exports.scanTicket = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
                 });
             }
         }
-    }));
-});
+    });
+};
