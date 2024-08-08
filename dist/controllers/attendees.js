@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -15,9 +6,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Event_1 = __importDefault(require("../models/Event"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Attendee_1 = __importDefault(require("../models/Attendee"));
-exports.getEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getEvents = async (req, res, next) => {
     try {
-        const events = yield Event_1.default.find();
+        const events = await Event_1.default.find();
         return res.status(200).json({
             success: true,
             count: events.length,
@@ -30,8 +21,8 @@ exports.getEvents = (req, res, next) => __awaiter(void 0, void 0, void 0, functi
             error: "Server Error",
         });
     }
-});
-exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+};
+exports.applyToEvent = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -39,7 +30,7 @@ exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -48,14 +39,14 @@ exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         }
         const authData = decoded;
         try {
-            const event = yield Event_1.default.findById(req.params.id);
+            const event = await Event_1.default.findById(req.params.id);
             if (!event) {
                 return res.status(404).json({
                     success: false,
                     error: "No event found",
                 });
             }
-            const attendee = yield Attendee_1.default.findOne({
+            const attendee = await Attendee_1.default.findOne({
                 userId: authData.user._id,
             }).exec();
             if (!attendee) {
@@ -83,8 +74,8 @@ exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 username: authData.user.username,
                 email: authData.user.email,
             });
-            yield event.save();
-            yield Attendee_1.default.findByIdAndUpdate(attendee, {
+            await event.save();
+            await Attendee_1.default.findByIdAndUpdate(attendee, {
                 $push: { appliedEvents: event },
             });
             return res.status(200).json({
@@ -98,9 +89,9 @@ exports.applyToEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 error: err.message,
             });
         }
-    }));
-});
-exports.appliedEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    });
+};
+exports.appliedEvent = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -108,7 +99,7 @@ exports.appliedEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -118,7 +109,7 @@ exports.appliedEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         else {
             const authData = decoded;
             try {
-                let event = yield Event_1.default.findOne({
+                let event = await Event_1.default.findOne({
                     "applicants.applicantId": authData.user._id,
                 });
                 if (!event) {
@@ -139,9 +130,9 @@ exports.appliedEvent = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
                 });
             }
         }
-    }));
-});
-exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    });
+};
+exports.setReminder = async (req, res, next) => {
     const token = req.token;
     if (!token) {
         return res.status(401).json({
@@ -149,7 +140,7 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => __awaiter(void 0, void 0, void 0, function* () {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
@@ -161,10 +152,10 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             try {
                 const eventId = req.params.id;
                 const { reminderTime } = req.body;
-                let attendee = yield Attendee_1.default.findOne({
+                let attendee = await Attendee_1.default.findOne({
                     userId: authData.user._id,
                 });
-                let event = yield Event_1.default.findOne({
+                let event = await Event_1.default.findOne({
                     _id: eventId,
                 });
                 if (!attendee) {
@@ -184,12 +175,12 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                     reminderTime,
                     email: authData.user.email,
                 });
-                yield attendee.save();
+                await attendee.save();
                 event.reminders.push({
                     reminderTime,
                     email: authData.user.email,
                 });
-                yield event.save();
+                await event.save();
                 res.status(201).json({ message: "Reminder set successfully" });
             }
             catch (err) {
@@ -200,5 +191,5 @@ exports.setReminder = (req, res, next) => __awaiter(void 0, void 0, void 0, func
                 });
             }
         }
-    }));
-});
+    });
+};

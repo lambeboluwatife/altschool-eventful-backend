@@ -5,6 +5,10 @@ import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
 import fs from "fs";
+import NodeCache from "node-cache";
+import { Document } from "mongoose";
+
+const myCache = new NodeCache();
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -18,12 +22,36 @@ interface AuthData {
 
 exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const events = await Event.find();
+    const cachedEvents = myCache.mget<IEvent>(myCache.keys());
+
+    if (Object.keys(cachedEvents).length > 0) {
+      return res.status(200).json({
+        success: true,
+        count: Object.keys(cachedEvents).length,
+        data: Object.values(cachedEvents),
+        message: "This is from cache",
+      });
+    }
+
+    const events: (Document<unknown, {}, IEvent> &
+      IEvent &
+      Required<{ _id: unknown }>)[] = await Event.find();
+
+    if (events.length > 0) {
+      const eventsToCache = events.map((event) => ({
+        key: event._id.toString(),
+        val: event.toObject(),
+        ttl: 1800,
+      }));
+
+      myCache.mset(eventsToCache);
+    }
 
     return res.status(200).json({
       success: true,
       count: events.length,
       data: events.length === 0 ? "No Events" : events,
+      message: "This is from the database",
     });
   } catch (err) {
     return res.status(500).json({
@@ -33,8 +61,12 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-exports.searchEvents = async (req: Request, res: Response, next: NextFunction) => {
-  const {search} = req.body
+exports.searchEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { search } = req.body;
   const newSearch = new RegExp(search, "i");
 
   try {

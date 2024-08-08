@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.client = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const express_1 = __importDefault(require("express"));
 require("colors");
@@ -40,6 +41,7 @@ const attendees = require("./routes/attendees");
 const tickets = require("./routes/tickets");
 const organizers = require("./routes/organizers");
 const analytics = require("./routes/analytics");
+const redis = require("redis");
 app.get("/", (req, res) => {
     res.send("hello, welcome to eventful");
 });
@@ -56,6 +58,8 @@ app.all("*", (req, res) => {
     res.status(404).send("404 - route not found");
 });
 const PORT = process.env.PORT || 5000;
+const REDIS_PORT = process.env.PORT || 6379;
+exports.client = redis.createClient(REDIS_PORT);
 app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold);
 });

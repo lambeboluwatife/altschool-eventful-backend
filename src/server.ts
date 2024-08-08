@@ -48,6 +48,7 @@ const attendees = require("./routes/attendees");
 const tickets = require("./routes/tickets");
 const organizers = require("./routes/organizers");
 const analytics = require("./routes/analytics");
+const redis = require("redis")
 
 app.get("/", (req: Request, res: Response) => {
   res.send("hello, welcome to eventful");
@@ -69,6 +70,11 @@ app.all("*", (req: Request, res: Response) => {
 });
 
 const PORT = process.env.PORT || 5000;
+const REDIS_PORT = process.env.PORT || 6379;
+
+export const client = redis.createClient(REDIS_PORT)
+
+
 
 app.listen(PORT, () => {
   console.log(
