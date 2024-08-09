@@ -22,47 +22,42 @@ exports.getCreatedEvents = async (req, res, next) => {
                 error: "Forbidden",
             });
         }
-        else {
-            const authData = decoded;
-            const organizerId = authData.user._id;
-            try {
-                if (authData.user.role !== "organizer") {
-                    return res.status(403).json({
-                        success: false,
-                        error: "Forbidden - You can't do that!",
-                    });
-                }
-                const cachedCreatedEvents = myCache.mget(myCache.keys());
-                if (Object.keys(cachedCreatedEvents).length > 0) {
-                    return res.status(200).json({
-                        success: true,
-                        count: Object.keys(cachedCreatedEvents).length,
-                        data: Object.values(cachedCreatedEvents),
-                    });
-                }
-                const events = await Event_1.default.find({
-                    "organizer.organizerId": organizerId,
-                }).exec();
-                if (events.length > 0) {
-                    const eventsToCache = events.map((event) => ({
-                        key: event._id.toString(),
-                        val: event.toObject(),
-                        ttl: 1800,
-                    }));
-                    myCache.mset(eventsToCache);
-                }
+        const authData = decoded;
+        const organizerId = authData.user._id;
+        if (authData.user.role !== "organizer") {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden - You can't do that!",
+            });
+        }
+        try {
+            const cacheKey = `createdEvents-${organizerId}`;
+            const cachedCreatedEvents = myCache.get(cacheKey);
+            if (cachedCreatedEvents) {
                 return res.status(200).json({
                     success: true,
-                    events: events.length,
-                    data: events,
+                    count: cachedCreatedEvents.length,
+                    data: cachedCreatedEvents,
                 });
             }
-            catch (err) {
-                return res.status(500).json({
-                    success: false,
-                    error: err.message,
-                });
+            const events = await Event_1.default.find({
+                "organizer.organizerId": organizerId,
+            }).exec();
+            if (events.length > 0) {
+                const eventsToCache = events.map((event) => event.toObject());
+                myCache.set(cacheKey, eventsToCache, 1800);
             }
+            return res.status(200).json({
+                success: true,
+                count: events.length,
+                data: events,
+            });
+        }
+        catch (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message,
+            });
         }
     });
 };
@@ -81,38 +76,46 @@ exports.getSingleEvent = async (req, res, next) => {
                 error: "Forbidden",
             });
         }
-        else {
-            const authData = decoded;
-            try {
-                if (authData.user.role !== "organizer") {
-                    return res.status(403).json({
-                        success: false,
-                        error: "Forbidden - You can't do that!",
-                    });
-                }
-                let event = await Event_1.default.findOne({
-                    $and: [
-                        { _id: req.params.id },
-                        { "organizer.organizerId": authData.user._id },
-                    ],
-                });
-                if (!event) {
-                    return res.status(404).json({
-                        success: false,
-                        message: "No Event Found.",
-                    });
-                }
+        const authData = decoded;
+        if (authData.user.role !== "organizer") {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden - You can't do that!",
+            });
+        }
+        const eventId = req.params.id;
+        const cacheKey = `event-${eventId}-${authData.user._id}`;
+        try {
+            const cachedEvent = myCache.get(cacheKey);
+            if (cachedEvent) {
                 return res.status(200).json({
                     success: true,
-                    data: event,
+                    data: cachedEvent,
                 });
             }
-            catch (err) {
-                return res.status(500).json({
+            const event = await Event_1.default.findOne({
+                $and: [
+                    { _id: eventId },
+                    { "organizer.organizerId": authData.user._id },
+                ],
+            });
+            if (!event) {
+                return res.status(404).json({
                     success: false,
-                    error: err.message,
+                    message: "No Event Found.",
                 });
             }
+            myCache.set(cacheKey, event.toObject(), 1800);
+            return res.status(200).json({
+                success: true,
+                data: event,
+            });
+        }
+        catch (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message,
+            });
         }
     });
 };
@@ -131,38 +134,46 @@ exports.getEventApplicants = async (req, res, next) => {
                 error: "Forbidden",
             });
         }
-        else {
-            const authData = decoded;
-            if (authData.user.role !== "organizer") {
-                return res.status(403).json({
-                    success: false,
-                    error: "Forbidden - You can't do that!",
-                });
-            }
-            try {
-                let event = await Event_1.default.findOne({
-                    $and: [
-                        { _id: req.params.id },
-                        { "organizer.organizerId": authData.user._id },
-                    ],
-                });
-                if (!event) {
-                    return res.status(404).json({
-                        success: false,
-                        error: "No event found or you do not have permission to view applicants for this event",
-                    });
-                }
+        const authData = decoded;
+        if (authData.user.role !== "organizer") {
+            return res.status(403).json({
+                success: false,
+                error: "Forbidden - You can't do that!",
+            });
+        }
+        const eventId = req.params.id;
+        const cacheKey = `event-applicants-${eventId}-${authData.user._id}`;
+        try {
+            const cachedApplicants = myCache.get(cacheKey);
+            if (cachedApplicants) {
                 return res.status(200).json({
                     success: true,
-                    data: event.applicants,
+                    data: cachedApplicants,
                 });
             }
-            catch (err) {
-                return res.status(500).json({
+            const event = await Event_1.default.findOne({
+                $and: [
+                    { _id: eventId },
+                    { "organizer.organizerId": authData.user._id },
+                ],
+            });
+            if (!event) {
+                return res.status(404).json({
                     success: false,
-                    error: err.message,
+                    error: "No event found or you do not have permission to view applicants for this event",
                 });
             }
+            myCache.set(cacheKey, event.applicants, 1800);
+            return res.status(200).json({
+                success: true,
+                data: event.applicants,
+            });
+        }
+        catch (err) {
+            return res.status(500).json({
+                success: false,
+                error: err.message,
+            });
         }
     });
 };

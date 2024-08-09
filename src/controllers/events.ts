@@ -65,7 +65,8 @@ exports.getSingleEvent = async (
 
 exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const cachedEvents = myCache.mget<IEvent>(myCache.keys());
+    const eventKeys = myCache.keys().filter((key) => key.startsWith("event-"));
+    const cachedEvents = myCache.mget<IEvent>(eventKeys);
 
     if (Object.keys(cachedEvents).length > 0) {
       return res.status(200).json({
@@ -75,13 +76,13 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    const events: (Document<unknown, {}, IEvent> &
+    const events = (await Event.find()) as (Document<unknown, {}, IEvent> &
       IEvent &
-      Required<{ _id: unknown }>)[] = await Event.find();
+      Required<{ _id: unknown }>)[];
 
     if (events.length > 0) {
       const eventsToCache = events.map((event) => ({
-        key: event._id.toString(),
+        key: `event-${event._id.toString()}`,
         val: event.toObject(),
         ttl: 1800,
       }));
@@ -92,7 +93,7 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(200).json({
       success: true,
       count: events.length,
-      data: events.length === 0 ? "No Events" : events,
+      data: events,
     });
   } catch (err) {
     return res.status(500).json({
