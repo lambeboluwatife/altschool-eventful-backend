@@ -139,7 +139,8 @@ exports.scanTicket = async (req, res, next) => {
                         message: "No event found.",
                     });
                 }
-                if (event.organizer.organizerId.toString() !== authData.user._id.toString()) {
+                if (event.organizer.organizerId.toString() !==
+                    authData.user._id.toString()) {
                     return res.status(400).json({
                         success: false,
                         message: "Ticket not for this event.",

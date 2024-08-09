@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { IEvent, IReminder } from "../models/Event";
+import { IEvent, IReminder } from "../interfaces";
 import nodemailer from "nodemailer";
 dotenv.config({ path: "./src/config/config.env" });
 

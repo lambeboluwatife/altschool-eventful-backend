@@ -12,14 +12,14 @@ const getOverallAnalytics = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({
             success: false,
-            error: 'Unauthorized: Missing token',
+            error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, 'secretkey', async (err, decoded) => {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
-                error: 'Forbidden',
+                error: "Forbidden",
             });
         }
         const authData = decoded;
@@ -37,15 +37,16 @@ const getOverallAnalytics = async (req, res, next) => {
             const totalApplicants = events.reduce((acc, event) => acc + event.applicants.length, 0);
             const totalTicketSold = events.reduce((acc, event) => acc + event.ticketsSold, 0);
             const totalScannedTickets = events.reduce((acc, event) => {
-                return acc + event.tickets.filter((ticket) => ticket.scanned);
+                return (acc +
+                    event.tickets.filter((ticket) => ticket.scanned));
             }, 0);
             res.status(200).json({
                 success: true,
                 data: {
                     totalApplicants,
                     totalTicketSold,
-                    totalScannedTickets
-                }
+                    totalScannedTickets,
+                },
             });
         }
         catch (err) {
@@ -62,14 +63,14 @@ const getEventAnalytics = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({
             success: false,
-            error: 'Unauthorized: Missing token',
+            error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, 'secretkey', async (err, decoded) => {
+    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
         if (err) {
             return res.status(403).json({
                 success: false,
-                error: 'Forbidden',
+                error: "Forbidden",
             });
         }
         const authData = decoded;
@@ -80,18 +81,21 @@ const getEventAnalytics = async (req, res, next) => {
             if (!event) {
                 return res.status(404).json({
                     success: false,
-                    error: 'No event found',
+                    error: "No event found",
                 });
             }
             if (event.organizer.organizerId.toString() !== organizerId) {
                 return res.status(403).json({
                     success: false,
-                    error: 'Forbidden - You do not have access to this event',
+                    error: "Forbidden - You do not have access to this event",
                 });
             }
             const attendees = await Ticket_1.default.countDocuments({ eventId });
             const ticketsSold = event.ticketsSold;
-            const scannedTickets = await Ticket_1.default.countDocuments({ eventId, scanned: true });
+            const scannedTickets = await Ticket_1.default.countDocuments({
+                eventId,
+                scanned: true,
+            });
             res.status(200).json({
                 success: true,
                 data: {

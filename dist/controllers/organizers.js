@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const Event_1 = __importDefault(require("../models/Event"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const node_cache_1 = __importDefault(require("node-cache"));
+const myCache = new node_cache_1.default();
 exports.getCreatedEvents = async (req, res, next) => {
     const token = req.token;
     if (!token) {
@@ -30,13 +32,29 @@ exports.getCreatedEvents = async (req, res, next) => {
                         error: "Forbidden - You can't do that!",
                     });
                 }
-                const event = await Event_1.default.find({
+                const cachedCreatedEvents = myCache.mget(myCache.keys());
+                if (Object.keys(cachedCreatedEvents).length > 0) {
+                    return res.status(200).json({
+                        success: true,
+                        count: Object.keys(cachedCreatedEvents).length,
+                        data: Object.values(cachedCreatedEvents),
+                    });
+                }
+                const events = await Event_1.default.find({
                     "organizer.organizerId": organizerId,
                 }).exec();
+                if (events.length > 0) {
+                    const eventsToCache = events.map((event) => ({
+                        key: event._id.toString(),
+                        val: event.toObject(),
+                        ttl: 1800,
+                    }));
+                    myCache.mset(eventsToCache);
+                }
                 return res.status(200).json({
                     success: true,
-                    events: event.length,
-                    data: event,
+                    events: events.length,
+                    data: events,
                 });
             }
             catch (err) {

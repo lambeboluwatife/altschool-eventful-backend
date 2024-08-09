@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import Event, { IAuthor, IApplicant } from "../models/Event";
+import Event from "../models/Event";
+import { IAuthor, IApplicant } from "../interfaces";
 import jwt from "jsonwebtoken";
 import Attendee from "../models/Attendee";
 

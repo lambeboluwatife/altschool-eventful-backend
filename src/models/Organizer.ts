@@ -1,23 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-
-interface ICreatedEvents {
-  eventId: Schema.Types.ObjectId;
-  title: string;
-  location: string;
-  category: string;
-  description: string;
-  date: string;
-  time: string;
-  price: number;
-  capacity: number;
-  backdrop: string;
-}
-
-interface IOrganizer extends Document {
-  userId: mongoose.Types.ObjectId;
-  organizationName: string;
-  createdEvents: ICreatedEvents;
-}
+import { ICreatedEvents, IOrganizer } from "../interfaces";
 
 const organizerSchema = new Schema<IOrganizer>({
   userId: {
@@ -49,4 +31,3 @@ const organizerSchema = new Schema<IOrganizer>({
 const Organizer = mongoose.model<IOrganizer>("Organizer", organizerSchema);
 
 export default Organizer;
-export { IOrganizer, ICreatedEvents };
