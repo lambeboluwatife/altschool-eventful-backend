@@ -70,7 +70,7 @@ export interface IEvent extends Document {
   backdrop: string;
   applicants: IApplicant;
   ticketsSold: number;
-  tickets: ITicket;
+  tickets: ITicket[];
   reminders: IReminder;
   createdAt: Date;
   organizer: IAuthor;

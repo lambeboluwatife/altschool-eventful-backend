@@ -14,11 +14,11 @@ const myCache = new node_cache_1.default();
 exports.getSingleEvent = async (req, res, next) => {
     const eventId = req.params.id;
     try {
-        const cacheEvent = myCache.get(eventId);
-        if (cacheEvent) {
+        const cachedEvent = myCache.get(eventId);
+        if (cachedEvent) {
             return res.status(200).json({
                 success: true,
-                data: cacheEvent,
+                data: cachedEvent,
             });
         }
         const event = await Event_1.default.findOne({ _id: eventId }).exec();
@@ -28,15 +28,13 @@ exports.getSingleEvent = async (req, res, next) => {
                 message: "No Event Found.",
             });
         }
-        if (event) {
-            const key = event._id.toString();
-            const val = event;
-            const ttl = 1800;
-            myCache.set(key, val, ttl);
-        }
+        const key = event._id.toString();
+        const val = event.toObject();
+        const ttl = 1800;
+        myCache.set(key, val, ttl);
         return res.status(200).json({
             success: true,
-            data: event,
+            data: val,
         });
     }
     catch (err) {

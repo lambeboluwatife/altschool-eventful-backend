@@ -7,6 +7,8 @@ exports.getEventAnalytics = exports.getOverallAnalytics = void 0;
 const Event_1 = __importDefault(require("../models/Event"));
 const Ticket_1 = __importDefault(require("../models/Ticket"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const node_cache_1 = __importDefault(require("node-cache"));
+const myCache = new node_cache_1.default();
 const getOverallAnalytics = async (req, res, next) => {
     const token = req.token;
     if (!token) {
@@ -15,47 +17,56 @@ const getOverallAnalytics = async (req, res, next) => {
             error: "Unauthorized: Missing token",
         });
     }
-    jsonwebtoken_1.default.verify(token, "secretkey", async (err, decoded) => {
-        if (err) {
+    try {
+        const authData = await new Promise((resolve, reject) => {
+            jsonwebtoken_1.default.verify(token, "secretkey", (err, decoded) => {
+                if (err)
+                    return reject(err);
+                resolve(decoded);
+            });
+        });
+        if (authData.user.role !== "organizer") {
             return res.status(403).json({
                 success: false,
-                error: "Forbidden",
+                error: "Forbidden - You can't do that!",
             });
         }
-        const authData = decoded;
         const organizerId = authData.user._id;
-        try {
-            if (authData.user.role !== "organizer") {
-                return res.status(403).json({
-                    success: false,
-                    error: "Forbidden - You can't do that!",
-                });
-            }
-            const events = await Event_1.default.find({
-                "organizer.organizerId": organizerId,
-            }).exec();
-            const totalApplicants = events.reduce((acc, event) => acc + event.applicants.length, 0);
-            const totalTicketSold = events.reduce((acc, event) => acc + event.ticketsSold, 0);
-            const totalScannedTickets = events.reduce((acc, event) => {
-                return (acc +
-                    event.tickets.filter((ticket) => ticket.scanned));
-            }, 0);
-            res.status(200).json({
+        const cacheId = `overallAnalytics-${organizerId}`;
+        const cachedOverallAnalytics = myCache.get(cacheId);
+        if (cachedOverallAnalytics) {
+            return res.status(200).json({
                 success: true,
-                data: {
-                    totalApplicants,
-                    totalTicketSold,
-                    totalScannedTickets,
-                },
+                data: cachedOverallAnalytics,
             });
         }
-        catch (err) {
-            return res.status(500).json({
-                success: false,
-                error: err.message,
-            });
-        }
-    });
+        const events = await Event_1.default.find({
+            "organizer.organizerId": organizerId,
+        }).exec();
+        const totalApplicants = events.reduce((acc, event) => acc + event.applicants.length, 0);
+        const totalTicketSold = events.reduce((acc, event) => acc + event.ticketsSold, 0);
+        const totalScannedTickets = events.reduce((acc, event) => {
+            const scannedTicketsCount = event.tickets.filter((ticket) => ticket.scanned).length;
+            return acc + scannedTicketsCount;
+        }, 0);
+        const val = { totalApplicants, totalTicketSold, totalScannedTickets };
+        const ttl = 1800;
+        myCache.set(cacheId, val, ttl);
+        res.status(200).json({
+            success: true,
+            data: {
+                totalApplicants,
+                totalTicketSold,
+                totalScannedTickets,
+            },
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message,
+        });
+    }
 };
 exports.getOverallAnalytics = getOverallAnalytics;
 const getEventAnalytics = async (req, res, next) => {
@@ -77,6 +88,14 @@ const getEventAnalytics = async (req, res, next) => {
         const organizerId = authData.user._id;
         const eventId = req.params.id;
         try {
+            const cacheKey = `eventAnalytics-${eventId}`;
+            const cachedAnalytics = myCache.get(cacheKey);
+            if (cachedAnalytics) {
+                return res.status(200).json({
+                    success: true,
+                    data: cachedAnalytics,
+                });
+            }
             const event = await Event_1.default.findById(eventId);
             if (!event) {
                 return res.status(404).json({
@@ -96,13 +115,16 @@ const getEventAnalytics = async (req, res, next) => {
                 eventId,
                 scanned: true,
             });
+            const analyticsData = {
+                attendees,
+                ticketsSold,
+                scannedTickets,
+            };
+            const ttl = 1800;
+            myCache.set(cacheKey, analyticsData, ttl);
             res.status(200).json({
                 success: true,
-                data: {
-                    attendees,
-                    ticketsSold,
-                    scannedTickets,
-                },
+                data: analyticsData,
             });
         }
         catch (err) {
