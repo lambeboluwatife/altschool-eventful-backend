@@ -6,8 +6,8 @@ import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-import NodeCache from "node-cache";
 import { Document } from "mongoose";
+import NodeCache from "node-cache";
 
 const myCache = new NodeCache();
 
@@ -29,11 +29,11 @@ exports.getSingleEvent = async (
   const eventId = req.params.id;
 
   try {
-    const cacheEvent = myCache.get(eventId);
-    if (cacheEvent) {
+    const cachedEvent = myCache.get<IEvent>(eventId);
+    if (cachedEvent) {
       return res.status(200).json({
         success: true,
-        data: cacheEvent,
+        data: cachedEvent,
       });
     }
 
@@ -46,16 +46,14 @@ exports.getSingleEvent = async (
       });
     }
 
-    if (event) {
-      const key = event._id.toString();
-      const val: IEvent = event;
-      const ttl = 1800;
-      myCache.set(key, val, ttl);
-    }
+    const key: string = event._id.toString();
+    const val: IEvent = event.toObject();
+    const ttl: number = 1800;
+    myCache.set(key, val, ttl);
 
     return res.status(200).json({
       success: true,
-      data: event,
+      data: val,
     });
   } catch (err: any) {
     return res.status(500).json({
