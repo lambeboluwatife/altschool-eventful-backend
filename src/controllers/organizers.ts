@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Event from "../models/Event";
-import { IAuthor, IEvent } from "../interfaces";
+import { IApplicant, IAuthor, IEvent } from "../interfaces";
 import jwt from "jsonwebtoken";
 import NodeCache from "node-cache";
 import { Document } from "mongoose";
@@ -37,53 +37,50 @@ exports.getCreatedEvents = async (
         success: false,
         error: "Forbidden",
       });
-    } else {
-      const authData = decoded as AuthData;
-      const organizerId = authData.user._id;
+    }
 
-      try {
-        if (authData.user.role !== "organizer") {
-          return res.status(403).json({
-            success: false,
-            error: "Forbidden - You can't do that!",
-          });
-        }
+    const authData = decoded as AuthData;
+    const organizerId = authData.user._id;
 
-        const cachedCreatedEvents = myCache.mget<IEvent>(myCache.keys());
+    if (authData.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden - You can't do that!",
+      });
+    }
 
-        if (Object.keys(cachedCreatedEvents).length > 0) {
-          return res.status(200).json({
-            success: true,
-            count: Object.keys(cachedCreatedEvents).length,
-            data: Object.values(cachedCreatedEvents),
-          });
-        }
+    try {
+      const cacheKey = `createdEvents-${organizerId}`;
+      const cachedCreatedEvents = myCache.get<IEvent[]>(cacheKey);
 
-        const events = await Event.find({
-          "organizer.organizerId": organizerId,
-        }).exec();
-
-        if (events.length > 0) {
-          const eventsToCache = events.map((event) => ({
-            key: event._id.toString(),
-            val: event.toObject(),
-            ttl: 1800,
-          }));
-
-          myCache.mset(eventsToCache);
-        }
-
+      if (cachedCreatedEvents) {
         return res.status(200).json({
           success: true,
-          events: events.length,
-          data: events,
-        });
-      } catch (err: any) {
-        return res.status(500).json({
-          success: false,
-          error: err.message,
+          count: cachedCreatedEvents.length,
+          data: cachedCreatedEvents,
         });
       }
+
+      const events = await Event.find({
+        "organizer.organizerId": organizerId,
+      }).exec();
+
+      if (events.length > 0) {
+        const eventsToCache = events.map((event) => event.toObject());
+
+        myCache.set(cacheKey, eventsToCache, 1800);
+      }
+
+      return res.status(200).json({
+        success: true,
+        count: events.length,
+        data: events,
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+      });
     }
   });
 };
@@ -108,41 +105,55 @@ exports.getSingleEvent = async (
         success: false,
         error: "Forbidden",
       });
-    } else {
-      const authData = decoded as AuthData;
+    }
 
-      try {
-        if (authData.user.role !== "organizer") {
-          return res.status(403).json({
-            success: false,
-            error: "Forbidden - You can't do that!",
-          });
-        }
+    const authData = decoded as AuthData;
 
-        let event = await Event.findOne({
-          $and: [
-            { _id: req.params.id },
-            { "organizer.organizerId": authData.user._id },
-          ],
-        });
+    if (authData.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden - You can't do that!",
+      });
+    }
 
-        if (!event) {
-          return res.status(404).json({
-            success: false,
-            message: "No Event Found.",
-          });
-        }
+    const eventId = req.params.id;
+    const cacheKey = `event-${eventId}-${authData.user._id}`;
 
+    try {
+      const cachedEvent = myCache.get<IEvent>(cacheKey);
+
+      if (cachedEvent) {
         return res.status(200).json({
           success: true,
-          data: event,
-        });
-      } catch (err: any) {
-        return res.status(500).json({
-          success: false,
-          error: err.message,
+          data: cachedEvent,
         });
       }
+
+      const event = await Event.findOne({
+        $and: [
+          { _id: eventId },
+          { "organizer.organizerId": authData.user._id },
+        ],
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          message: "No Event Found.",
+        });
+      }
+
+      myCache.set(cacheKey, event.toObject(), 1800);
+
+      return res.status(200).json({
+        success: true,
+        data: event,
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+      });
     }
   });
 };
@@ -167,42 +178,55 @@ exports.getEventApplicants = async (
         success: false,
         error: "Forbidden",
       });
-    } else {
-      const authData = decoded as AuthData;
+    }
 
-      if (authData.user.role !== "organizer") {
-        return res.status(403).json({
-          success: false,
-          error: "Forbidden - You can't do that!",
-        });
-      }
+    const authData = decoded as AuthData;
 
-      try {
-        let event = await Event.findOne({
-          $and: [
-            { _id: req.params.id },
-            { "organizer.organizerId": authData.user._id },
-          ],
-        });
+    if (authData.user.role !== "organizer") {
+      return res.status(403).json({
+        success: false,
+        error: "Forbidden - You can't do that!",
+      });
+    }
 
-        if (!event) {
-          return res.status(404).json({
-            success: false,
-            error:
-              "No event found or you do not have permission to view applicants for this event",
-          });
-        }
+    const eventId = req.params.id;
+    const cacheKey = `event-applicants-${eventId}-${authData.user._id}`;
 
+    try {
+      const cachedApplicants = myCache.get<IApplicant[]>(cacheKey);
+
+      if (cachedApplicants) {
         return res.status(200).json({
           success: true,
-          data: event.applicants,
-        });
-      } catch (err: any) {
-        return res.status(500).json({
-          success: false,
-          error: err.message,
+          data: cachedApplicants,
         });
       }
+
+      const event = await Event.findOne({
+        $and: [
+          { _id: eventId },
+          { "organizer.organizerId": authData.user._id },
+        ],
+      });
+
+      if (!event) {
+        return res.status(404).json({
+          success: false,
+          error:
+            "No event found or you do not have permission to view applicants for this event",
+        });
+      }
+
+      myCache.set(cacheKey, event.applicants, 1800);
+      return res.status(200).json({
+        success: true,
+        data: event.applicants,
+      });
+    } catch (err: any) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+      });
     }
   });
 };

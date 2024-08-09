@@ -46,7 +46,8 @@ exports.getSingleEvent = async (req, res, next) => {
 };
 exports.getEvents = async (req, res, next) => {
     try {
-        const cachedEvents = myCache.mget(myCache.keys());
+        const eventKeys = myCache.keys().filter((key) => key.startsWith("event-"));
+        const cachedEvents = myCache.mget(eventKeys);
         if (Object.keys(cachedEvents).length > 0) {
             return res.status(200).json({
                 success: true,
@@ -54,10 +55,10 @@ exports.getEvents = async (req, res, next) => {
                 data: Object.values(cachedEvents),
             });
         }
-        const events = await Event_1.default.find();
+        const events = (await Event_1.default.find());
         if (events.length > 0) {
             const eventsToCache = events.map((event) => ({
-                key: event._id.toString(),
+                key: `event-${event._id.toString()}`,
                 val: event.toObject(),
                 ttl: 1800,
             }));
@@ -66,7 +67,7 @@ exports.getEvents = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             count: events.length,
-            data: events.length === 0 ? "No Events" : events,
+            data: events,
         });
     }
     catch (err) {
