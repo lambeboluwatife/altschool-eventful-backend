@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import Event, { IEvent } from "./models/Event";
+import Event from "./models/Event";
 import { sendReminder } from "./utils/sendReminders";
 import moment from "moment";
 

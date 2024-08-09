@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import Event, { IEvent, IAuthor, IApplicant } from "../models/Event";
+import Event from "../models/Event";
+import { IEvent, IAuthor } from "../interfaces";
 import User from "../models/User";
 import Organizer from "../models/Organizer";
 import { cloudinary } from "../config/cloudinaryConfig";
@@ -20,6 +21,50 @@ interface AuthData {
   user: IAuthor;
 }
 
+exports.getSingleEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const eventId = req.params.id;
+
+  try {
+    const cacheEvent = myCache.get(eventId);
+    if (cacheEvent) {
+      return res.status(200).json({
+        success: true,
+        data: cacheEvent,
+      });
+    }
+
+    const event = await Event.findOne({ _id: eventId }).exec();
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "No Event Found.",
+      });
+    }
+
+    if (event) {
+      const key = event._id.toString();
+      const val: IEvent = event;
+      const ttl = 1800;
+      myCache.set(key, val, ttl);
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: event,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
+
 exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const cachedEvents = myCache.mget<IEvent>(myCache.keys());
@@ -29,7 +74,6 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
         success: true,
         count: Object.keys(cachedEvents).length,
         data: Object.values(cachedEvents),
-        message: "This is from cache",
       });
     }
 
@@ -51,7 +95,6 @@ exports.getEvents = async (req: Request, res: Response, next: NextFunction) => {
       success: true,
       count: events.length,
       data: events.length === 0 ? "No Events" : events,
-      message: "This is from the database",
     });
   } catch (err) {
     return res.status(500).json({

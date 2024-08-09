@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import Ticket, { ITicket } from "../models/Ticket";
-import Event, { IAuthor } from "../models/Event";
+import Ticket from "../models/Ticket";
+import Event from "../models/Event";
+import { ITicket, IAuthor } from "../interfaces";
 import jwt from "jsonwebtoken";
 import QRCode from "qrcode";
 import Attendee from "../models/Attendee";
@@ -63,7 +64,6 @@ exports.generateTicket = async (
         });
       }
 
-      
       if (event.ticketsSold === event.capacity) {
         return res.status(410).json({
           success: false,
@@ -177,7 +177,7 @@ exports.scanTicket = async (
           ],
         });
 
-        let eventTicket = await Event.findOne({_id: eventId})
+        let eventTicket = await Event.findOne({ _id: eventId });
 
         if (!event) {
           return res.status(404).json({
@@ -193,7 +193,10 @@ exports.scanTicket = async (
           });
         }
 
-        if (event.organizer.organizerId.toString() !== authData.user._id.toString()) {
+        if (
+          event.organizer.organizerId.toString() !==
+          authData.user._id.toString()
+        ) {
           return res.status(400).json({
             success: false,
             message: "Ticket not for this event.",
@@ -223,7 +226,9 @@ exports.scanTicket = async (
         ticket.scanned = true;
         await ticket.save();
 
-        const updateEventTicket: ITicket | undefined = eventTicket.tickets.find((ticket: ITicket) => ticket._id === ticket._id);
+        const updateEventTicket: ITicket | undefined = eventTicket.tickets.find(
+          (ticket: ITicket) => ticket._id === ticket._id
+        );
 
         if (updateEventTicket) {
           updateEventTicket.scanned = true;

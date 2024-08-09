@@ -1,53 +1,5 @@
 import mongoose, { Schema, Document, ObjectId } from "mongoose";
-import { ITicket } from "./Ticket";
-
-interface IAuthor {
-  [x: string]: any;
-  organizerId: Schema.Types.ObjectId;
-  organizationName: string;
-  email: string;
-}
-
-interface IReminder {
-  push(arg0: { reminderTime: string; email: string }): unknown;
-  reminderTime: string;
-  sent: boolean;
-  email: string;
-}
-
-interface IApplicant {
-  length: number;
-  push(arg0: {
-    applicantId: any;
-    name: any;
-    username: any;
-    email: string;
-  }): unknown;
-  some(arg0: (applicant: IApplicant) => boolean): unknown;
-  applicantId: Schema.Types.ObjectId;
-  name: string;
-  username: string;
-  email: string;
-}
-
-interface IEvent extends Document {
-  _id: ObjectId;
-  title: string;
-  location: string;
-  category: string;
-  description: string;
-  date: string;
-  time: string;
-  price: number;
-  capacity: number;
-  backdrop: string;
-  applicants: IApplicant;
-  ticketsSold: number;
-  tickets: ITicket;
-  reminders: IReminder;
-  createdAt: Date;
-  organizer: IAuthor;
-}
+import { IAuthor, IReminder, IApplicant, IEvent } from "../interfaces";
 
 const reminderSchema = new Schema({
   reminderTime: { type: String, required: true },
@@ -134,4 +86,3 @@ const eventSchema = new Schema<IEvent>({
 const Event = mongoose.model<IEvent>("Event", eventSchema);
 
 export default Event;
-export { IEvent, IAuthor, IApplicant, IReminder };

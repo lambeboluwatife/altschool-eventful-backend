@@ -11,6 +11,41 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
 const node_cache_1 = __importDefault(require("node-cache"));
 const myCache = new node_cache_1.default();
+exports.getSingleEvent = async (req, res, next) => {
+    const eventId = req.params.id;
+    try {
+        const cacheEvent = myCache.get(eventId);
+        if (cacheEvent) {
+            return res.status(200).json({
+                success: true,
+                data: cacheEvent,
+            });
+        }
+        const event = await Event_1.default.findOne({ _id: eventId }).exec();
+        if (!event) {
+            return res.status(404).json({
+                success: false,
+                message: "No Event Found.",
+            });
+        }
+        if (event) {
+            const key = event._id.toString();
+            const val = event;
+            const ttl = 1800;
+            myCache.set(key, val, ttl);
+        }
+        return res.status(200).json({
+            success: true,
+            data: event,
+        });
+    }
+    catch (err) {
+        return res.status(500).json({
+            success: false,
+            error: err.message,
+        });
+    }
+};
 exports.getEvents = async (req, res, next) => {
     try {
         const cachedEvents = myCache.mget(myCache.keys());
@@ -19,7 +54,6 @@ exports.getEvents = async (req, res, next) => {
                 success: true,
                 count: Object.keys(cachedEvents).length,
                 data: Object.values(cachedEvents),
-                message: "This is from cache",
             });
         }
         const events = await Event_1.default.find();
@@ -35,7 +69,6 @@ exports.getEvents = async (req, res, next) => {
             success: true,
             count: events.length,
             data: events.length === 0 ? "No Events" : events,
-            message: "This is from the database",
         });
     }
     catch (err) {
