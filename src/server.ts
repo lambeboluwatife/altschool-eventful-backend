@@ -8,6 +8,7 @@ const cors = require("cors");
 import "./cronJobs";
 
 import connectDB from "./config/db";
+import rateLimit from "express-rate-limit";
 
 dotenv.config({ path: "./src/config/config.env" });
 
@@ -29,6 +30,18 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  handler: (req: Request, res: Response) => {
+    res.status(429).json({
+      error: "Too many requests, please try again later.",
+    });
+  },
+});
+
+app.use(limiter);
+
 // Express Session
 app.use(
   session({
@@ -48,7 +61,6 @@ const attendees = require("./routes/attendees");
 const tickets = require("./routes/tickets");
 const organizers = require("./routes/organizers");
 const analytics = require("./routes/analytics");
-const redis = require("redis")
 
 app.get("/", (req: Request, res: Response) => {
   res.send("hello, welcome to eventful");
@@ -70,11 +82,6 @@ app.all("*", (req: Request, res: Response) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const REDIS_PORT = process.env.PORT || 6379;
-
-export const client = redis.createClient(REDIS_PORT)
-
-
 
 app.listen(PORT, () => {
   console.log(
