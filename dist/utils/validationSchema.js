@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authSchema = void 0;
+exports.eventSchema = exports.authSchema = void 0;
 const joi_1 = __importDefault(require("@hapi/joi"));
 exports.authSchema = joi_1.default.object({
     name: joi_1.default.string().required(),
@@ -18,4 +18,17 @@ exports.authSchema = joi_1.default.object({
     organizationName: joi_1.default.string(),
     password: joi_1.default.string().min(6).required(),
     verifyPassword: joi_1.default.ref("password"),
+});
+exports.eventSchema = joi_1.default.object({
+    title: joi_1.default.string().required(),
+    location: joi_1.default.string().required(),
+    category: joi_1.default.string().required(),
+    description: joi_1.default.string().required(),
+    date: joi_1.default.string().required(),
+    time: joi_1.default.string().required(),
+    price: joi_1.default.number().min(0).required(),
+    capacity: joi_1.default.number().integer().min(1).required(),
+    ticketsSold: joi_1.default.number().integer().min(0),
+    reminders: joi_1.default.string().required(),
+    createdAt: joi_1.default.date().default(() => new Date()),
 });

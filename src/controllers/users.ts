@@ -19,32 +19,22 @@ exports.registerUser = async (
   next: NextFunction
 ) => {
   try {
-    // const {
-    //   name,
-    //   username,
-    //   email,
-    //   role,
-    //   organizationName,
-    //   password,
-    //   verifyPassword,
-    // } = req.body;
+    const validInputs = await authSchema.validateAsync(req.body);
 
-    const result = await authSchema.validateAsync(req.body);
-
-    if (result.role === "organizer" && !result.organizationName) {
+    if (validInputs.role === "organizer" && !validInputs.organizationName) {
       return res.status(400).json({
         message: "Organization name is required for organizers",
       });
     }
 
-    User.findOne({ email: result.email }).then((user) => {
+    User.findOne({ email: validInputs.email }).then((user) => {
       if (user) {
         return res.status(409).json({
           success: false,
           error: "Email address already exist. Please use a different email.",
         });
       } else {
-        const newUser = new User(result);
+        const newUser = new User(validInputs);
 
         // Mash Password
         bcrypt.genSalt(10, (err, salt) =>
@@ -54,11 +44,11 @@ exports.registerUser = async (
             newUser.password = hash;
             // Save user
             const savedUser = await newUser.save();
-            if (result.role === "organizer") {
+            if (validInputs.role === "organizer") {
               // Create the organizer entry
               const newOrganizer = new Organizer({
                 userId: savedUser._id,
-                organizationName: result.organizationName,
+                organizationName: validInputs.organizationName,
                 createdEvents: [],
               });
 

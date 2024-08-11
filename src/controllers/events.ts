@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import fs from "fs";
 import { Document } from "mongoose";
 import NodeCache from "node-cache";
+import { eventSchema } from "../utils/validationSchema";
 
 const myCache = new NodeCache();
 
@@ -186,40 +187,19 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           }
         });
 
-        const {
-          title,
-          location,
-          category,
-          description,
-          date,
-          time,
-          price,
-          capacity,
-          ticketsSold,
-          reminders,
-          createdAt,
-        } = req.body;
+        const validInputs = await eventSchema.validateAsync(req.body);
 
         const reminder = {
-          reminderTime: reminders,
+          reminderTime: validInputs.reminders,
           email: authData.user.email,
         };
 
         const newEvent: IEvent = new Event({
-          title,
-          location,
-          category,
-          description,
-          date,
-          time,
-          price,
-          capacity,
+          ...validInputs,
           backdrop: result.secure_url,
           applicants: [],
-          ticketsSold,
           tickets: [],
           reminders: reminder,
-          createdAt,
           organizer: {
             organizerId: authData.user._id,
             organizationName: organizer?.organizationName,
@@ -237,19 +217,17 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           success: true,
           data: event,
         });
-      } catch (err: any) {
-        if (err.name === "ValidationError") {
-          const messages = Object.values(err.errors).map(
-            (val: any) => val.message
-          );
+      } catch (error: any) {
+        if (error.isJoi) {
+          const errorMessage = error.details[0].message;
           return res.status(400).json({
             success: false,
-            error: messages,
+            error: errorMessage,
           });
         } else {
           return res.status(500).json({
             success: false,
-            error: err.message,
+            error: error.message,
           });
         }
       }
