@@ -3,6 +3,7 @@ import User from "../models/User";
 import { IUser } from "../interfaces";
 import Organizer from "../models/Organizer";
 import Attendee from "../models/Attendee";
+import { authSchema } from "../utils/validationSchema";
 
 import bcrypt from "bcryptjs";
 import passport from "passport";
@@ -18,92 +19,32 @@ exports.registerUser = async (
   next: NextFunction
 ) => {
   try {
-    const {
-      name,
-      username,
-      email,
-      role,
-      organizationName,
-      password,
-      verifyPassword,
-    } = req.body;
+    // const {
+    //   name,
+    //   username,
+    //   email,
+    //   role,
+    //   organizationName,
+    //   password,
+    //   verifyPassword,
+    // } = req.body;
 
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter name",
-      });
-    }
+    const result = await authSchema.validateAsync(req.body);
 
-    if (!username) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter username",
-      });
-    }
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter email",
-      });
-    }
-
-    if (!role) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter role",
-      });
-    }
-
-    if (!password) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter password",
-      });
-    }
-
-    if (!verifyPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Enter verify password",
-      });
-    }
-
-    if (role === "organizer" && !organizationName) {
+    if (result.role === "organizer" && !result.organizationName) {
       return res.status(400).json({
         message: "Organization name is required for organizers",
       });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        error: "Password should be a least 6 characters",
-      });
-    }
-
-    if (password !== verifyPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "Passwords do not match",
-      });
-    }
-
-    User.findOne({ email: email }).then((user) => {
+    User.findOne({ email: result.email }).then((user) => {
       if (user) {
         return res.status(409).json({
           success: false,
           error: "Email address already exist. Please use a different email.",
         });
       } else {
-        const newUser = new User({
-          name,
-          username,
-          email,
-          role,
-          password,
-        });
+        const newUser = new User(result);
 
         // Mash Password
         bcrypt.genSalt(10, (err, salt) =>
@@ -113,11 +54,11 @@ exports.registerUser = async (
             newUser.password = hash;
             // Save user
             const savedUser = await newUser.save();
-            if (role === "organizer") {
+            if (result.role === "organizer") {
               // Create the organizer entry
               const newOrganizer = new Organizer({
                 userId: savedUser._id,
-                organizationName,
+                organizationName: result.organizationName,
                 createdEvents: [],
               });
 
@@ -147,17 +88,17 @@ exports.registerUser = async (
         );
       }
     });
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      const messages = Object.values(err.errors).map((val: any) => val.message);
+  } catch (error: any) {
+    if (error.isJoi) {
+      const errorMessage = error.details[0].message;
       return res.status(400).json({
         success: false,
-        error: messages,
+        error: errorMessage,
       });
     } else {
       return res.status(500).json({
         success: false,
-        error: err.message,
+        error: error.message,
       });
     }
   }
