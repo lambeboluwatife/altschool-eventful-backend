@@ -7,65 +7,27 @@ exports.logoutUser = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const Organizer_1 = __importDefault(require("../models/Organizer"));
 const Attendee_1 = __importDefault(require("../models/Attendee"));
+const validationSchema_1 = require("../utils/validationSchema");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const passport_1 = __importDefault(require("passport"));
 exports.registerUser = async (req, res, next) => {
     try {
-        const { name, username, email, role, organizationName, password, verifyPassword, } = req.body;
-        if (!name) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter name",
-            });
-        }
-        if (!username) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter username",
-            });
-        }
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter email",
-            });
-        }
-        if (!role) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter role",
-            });
-        }
-        if (!password) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter password",
-            });
-        }
-        if (!verifyPassword) {
-            return res.status(400).json({
-                success: false,
-                error: "Enter verify password",
-            });
-        }
-        if (role === "organizer" && !organizationName) {
+        // const {
+        //   name,
+        //   username,
+        //   email,
+        //   role,
+        //   organizationName,
+        //   password,
+        //   verifyPassword,
+        // } = req.body;
+        const result = await validationSchema_1.authSchema.validateAsync(req.body);
+        if (result.role === "organizer" && !result.organizationName) {
             return res.status(400).json({
                 message: "Organization name is required for organizers",
             });
         }
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                error: "Password should be a least 6 characters",
-            });
-        }
-        if (password !== verifyPassword) {
-            return res.status(400).json({
-                success: false,
-                error: "Passwords do not match",
-            });
-        }
-        User_1.default.findOne({ email: email }).then((user) => {
+        User_1.default.findOne({ email: result.email }).then((user) => {
             if (user) {
                 return res.status(409).json({
                     success: false,
@@ -73,13 +35,7 @@ exports.registerUser = async (req, res, next) => {
                 });
             }
             else {
-                const newUser = new User_1.default({
-                    name,
-                    username,
-                    email,
-                    role,
-                    password,
-                });
+                const newUser = new User_1.default(result);
                 // Mash Password
                 bcryptjs_1.default.genSalt(10, (err, salt) => bcryptjs_1.default.hash(newUser.password, salt, async (err, hash) => {
                     if (err)
@@ -88,11 +44,11 @@ exports.registerUser = async (req, res, next) => {
                     newUser.password = hash;
                     // Save user
                     const savedUser = await newUser.save();
-                    if (role === "organizer") {
+                    if (result.role === "organizer") {
                         // Create the organizer entry
                         const newOrganizer = new Organizer_1.default({
                             userId: savedUser._id,
-                            organizationName,
+                            organizationName: result.organizationName,
                             createdEvents: [],
                         });
                         const savedOrganizer = await newOrganizer.save();
@@ -119,18 +75,18 @@ exports.registerUser = async (req, res, next) => {
             }
         });
     }
-    catch (err) {
-        if (err.name === "ValidationError") {
-            const messages = Object.values(err.errors).map((val) => val.message);
+    catch (error) {
+        if (error.isJoi) {
+            const errorMessage = error.details[0].message;
             return res.status(400).json({
                 success: false,
-                error: messages,
+                error: errorMessage,
             });
         }
         else {
             return res.status(500).json({
                 success: false,
-                error: err.message,
+                error: error.message,
             });
         }
     }
