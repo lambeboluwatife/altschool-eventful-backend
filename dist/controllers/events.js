@@ -10,6 +10,7 @@ const cloudinaryConfig_1 = require("../config/cloudinaryConfig");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
 const node_cache_1 = __importDefault(require("node-cache"));
+const validationSchema_1 = require("../utils/validationSchema");
 const myCache = new node_cache_1.default();
 exports.getSingleEvent = async (req, res, next) => {
     const eventId = req.params.id;
@@ -147,32 +148,16 @@ exports.addEvent = async (req, res, next) => {
                         console.error(err);
                     }
                 });
-                const { title, location, category, description, date, time, price, capacity, ticketsSold, reminders, createdAt, } = req.body;
+                const validInputs = await validationSchema_1.eventSchema.validateAsync(req.body);
                 const reminder = {
-                    reminderTime: reminders,
+                    reminderTime: validInputs.reminders,
                     email: authData.user.email,
                 };
-                const newEvent = new Event_1.default({
-                    title,
-                    location,
-                    category,
-                    description,
-                    date,
-                    time,
-                    price,
-                    capacity,
-                    backdrop: result.secure_url,
-                    applicants: [],
-                    ticketsSold,
-                    tickets: [],
-                    reminders: reminder,
-                    createdAt,
-                    organizer: {
+                const newEvent = new Event_1.default(Object.assign(Object.assign({}, validInputs), { backdrop: result.secure_url, applicants: [], tickets: [], reminders: reminder, organizer: {
                         organizerId: authData.user._id,
                         organizationName: organizer === null || organizer === void 0 ? void 0 : organizer.organizationName,
                         email: authData.user.email,
-                    },
-                });
+                    } }));
                 const event = await newEvent.save();
                 await Organizer_1.default.findByIdAndUpdate(organizer, {
                     $push: { createdEvents: event },
@@ -182,18 +167,18 @@ exports.addEvent = async (req, res, next) => {
                     data: event,
                 });
             }
-            catch (err) {
-                if (err.name === "ValidationError") {
-                    const messages = Object.values(err.errors).map((val) => val.message);
+            catch (error) {
+                if (error.isJoi) {
+                    const errorMessage = error.details[0].message;
                     return res.status(400).json({
                         success: false,
-                        error: messages,
+                        error: errorMessage,
                     });
                 }
                 else {
                     return res.status(500).json({
                         success: false,
-                        error: err.message,
+                        error: error.message,
                     });
                 }
             }

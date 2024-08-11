@@ -12,22 +12,13 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const passport_1 = __importDefault(require("passport"));
 exports.registerUser = async (req, res, next) => {
     try {
-        // const {
-        //   name,
-        //   username,
-        //   email,
-        //   role,
-        //   organizationName,
-        //   password,
-        //   verifyPassword,
-        // } = req.body;
-        const result = await validationSchema_1.authSchema.validateAsync(req.body);
-        if (result.role === "organizer" && !result.organizationName) {
+        const validInputs = await validationSchema_1.authSchema.validateAsync(req.body);
+        if (validInputs.role === "organizer" && !validInputs.organizationName) {
             return res.status(400).json({
                 message: "Organization name is required for organizers",
             });
         }
-        User_1.default.findOne({ email: result.email }).then((user) => {
+        User_1.default.findOne({ email: validInputs.email }).then((user) => {
             if (user) {
                 return res.status(409).json({
                     success: false,
@@ -35,7 +26,7 @@ exports.registerUser = async (req, res, next) => {
                 });
             }
             else {
-                const newUser = new User_1.default(result);
+                const newUser = new User_1.default(validInputs);
                 // Mash Password
                 bcryptjs_1.default.genSalt(10, (err, salt) => bcryptjs_1.default.hash(newUser.password, salt, async (err, hash) => {
                     if (err)
@@ -44,11 +35,11 @@ exports.registerUser = async (req, res, next) => {
                     newUser.password = hash;
                     // Save user
                     const savedUser = await newUser.save();
-                    if (result.role === "organizer") {
+                    if (validInputs.role === "organizer") {
                         // Create the organizer entry
                         const newOrganizer = new Organizer_1.default({
                             userId: savedUser._id,
-                            organizationName: result.organizationName,
+                            organizationName: validInputs.organizationName,
                             createdEvents: [],
                         });
                         const savedOrganizer = await newOrganizer.save();
