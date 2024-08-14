@@ -4,6 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+// exports.generateToken = async (req: Request, res: Response) => {
+//   jwt.sign(
+//     { user: req.user },
+//     "secretkey",
+//     { expiresIn: "1h" },
+//     (err, token) => {
+//       if (err) {
+//         return res.status(500).json({
+//           success: false,
+//           error: "Token generation failed",
+//         });
+//       }
+//       return res.status(200).json({
+//         success: true,
+//         message: "Login successful",
+//         token,
+//       });
+//     }
+//   );
+// };
 exports.generateToken = async (req, res) => {
     jsonwebtoken_1.default.sign({ user: req.user }, "secretkey", { expiresIn: "1h" }, (err, token) => {
         if (err) {
@@ -12,10 +32,15 @@ exports.generateToken = async (req, res) => {
                 error: "Token generation failed",
             });
         }
+        res.cookie("authToken", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 3600000,
+        });
         return res.status(200).json({
             success: true,
             message: "Login successful",
-            token,
         });
     });
 };
