@@ -7,6 +7,26 @@ declare module "express-serve-static-core" {
   }
 }
 
+// exports.generateToken = async (req: Request, res: Response) => {
+//   jwt.sign(
+//     { user: req.user },
+//     "secretkey",
+//     { expiresIn: "1h" },
+//     (err, token) => {
+//       if (err) {
+//         return res.status(500).json({
+//           success: false,
+//           error: "Token generation failed",
+//         });
+//       }
+//       return res.status(200).json({
+//         success: true,
+//         message: "Login successful",
+//         token,
+//       });
+//     }
+//   );
+// };
 exports.generateToken = async (req: Request, res: Response) => {
   jwt.sign(
     { user: req.user },
@@ -19,10 +39,17 @@ exports.generateToken = async (req: Request, res: Response) => {
           error: "Token generation failed",
         });
       }
+
+      res.cookie("authToken", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3600000,
+      });
+
       return res.status(200).json({
         success: true,
         message: "Login successful",
-        token,
       });
     }
   );

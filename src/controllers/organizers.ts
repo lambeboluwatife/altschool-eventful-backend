@@ -3,7 +3,6 @@ import Event from "../models/Event";
 import { IApplicant, IAuthor, IEvent } from "../interfaces";
 import jwt from "jsonwebtoken";
 import NodeCache from "node-cache";
-import { Document } from "mongoose";
 
 const myCache = new NodeCache();
 
