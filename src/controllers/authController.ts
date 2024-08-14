@@ -9,12 +9,9 @@ exports.checkAuthStatus = async (req: Request, res: Response) => {
       return res.status(401).json({ isAuthenticated: false });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, "secretkey");
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ isAuthenticated: false });
-    }
+    const user = decoded.user || decoded;
 
     res.status(200).json({
       isAuthenticated: true,
