@@ -36,7 +36,7 @@ const eventSchema = new Schema<IEvent>({
     required: [true, "Please enter event description"],
   },
   date: {
-    type: String,
+    type: Date,
     required: [true, "Please enter event date"],
   },
   time: {

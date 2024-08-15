@@ -63,7 +63,7 @@ export interface IEvent extends Document {
   location: string;
   category: string;
   description: string;
-  date: string;
+  date: Date;
   time: string;
   price: number;
   capacity: number;
