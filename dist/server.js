@@ -22,7 +22,7 @@ const corsOptions = {
         : "https://altschool-eventful-backend.onrender.com",
     credentials: true,
     methods: "GET,POST,OPTIONS",
-    allowedHeaders: "Origin,Content-Type,Accept",
+    allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
 };
 app.use(cors(corsOptions));
 app.use(express_1.default.json());
