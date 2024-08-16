@@ -16,15 +16,27 @@ connectDB();
 
 const app: Application = express();
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://eventful-frontend.vercel.app",
+];
+
 const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://altschool-eventful-backend.onrender.com",
+  origin: allowedOrigins,
   credentials: true,
   methods: "GET,POST,OPTIONS",
   allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
 };
+
+// const corsOptions = {
+//   origin:
+//     process.env.NODE_ENV === "development"
+//       ? "http://localhost:3000"
+//       : "https://eventful-frontend.vercel.app/",
+//   credentials: true,
+//   methods: "GET,POST,OPTIONS",
+//   allowedHeaders: ["Content-Type", "Authorization", "Origin", "Accept"],
+// };
 
 app.use(cors(corsOptions));
 
