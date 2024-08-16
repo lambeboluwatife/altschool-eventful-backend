@@ -31,22 +31,22 @@ exports.getCreatedEvents = async (req, res, next) => {
             });
         }
         try {
-            const cacheKey = `createdEvents-${organizerId}`;
-            const cachedCreatedEvents = myCache.get(cacheKey);
-            if (cachedCreatedEvents) {
-                return res.status(200).json({
-                    success: true,
-                    count: cachedCreatedEvents.length,
-                    data: cachedCreatedEvents,
-                });
-            }
+            // const cacheKey = `createdEvents-${organizerId}`;
+            // const cachedCreatedEvents = myCache.get<IEvent[]>(cacheKey);
+            // if (cachedCreatedEvents) {
+            //   return res.status(200).json({
+            //     success: true,
+            //     count: cachedCreatedEvents.length,
+            //     data: cachedCreatedEvents,
+            //   });
+            // }
             const events = await Event_1.default.find({
                 "organizer.organizerId": organizerId,
             }).exec();
-            if (events.length > 0) {
-                const eventsToCache = events.map((event) => event.toObject());
-                myCache.set(cacheKey, eventsToCache, 1800);
-            }
+            // if (events.length > 0) {
+            //   const eventsToCache = events.map((event) => event.toObject());
+            //   myCache.set(cacheKey, eventsToCache, 1800);
+            // }
             return res.status(200).json({
                 success: true,
                 count: events.length,
