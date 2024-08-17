@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_cron_1 = __importDefault(require("node-cron"));
 const Event_1 = __importDefault(require("./models/Event"));
-const sendReminders_1 = require("./utils/sendReminders");
+const sendEmails_1 = require("./utils/sendEmails");
 const moment_1 = __importDefault(require("moment"));
 const checkEventsForReminders = async () => {
     const today = new Date();
@@ -18,7 +18,7 @@ const checkEventsForReminders = async () => {
         if (Array.isArray(event.reminders)) {
             for (const reminder of event.reminders) {
                 if (reminder.reminderTime <= todayDate && !reminder.sent) {
-                    await (0, sendReminders_1.sendReminder)(reminder, event);
+                    await (0, sendEmails_1.sendReminderEmails)(reminder, event);
                     event.reminders.sent = true;
                     await event.save();
                 }

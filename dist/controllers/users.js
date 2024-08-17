@@ -10,6 +10,7 @@ const Attendee_1 = __importDefault(require("../models/Attendee"));
 const validationSchema_1 = require("../utils/validationSchema");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const passport_1 = __importDefault(require("passport"));
+const sendEmails_1 = require("../utils/sendEmails");
 exports.registerUser = async (req, res, next) => {
     try {
         const validInputs = await validationSchema_1.authSchema.validateAsync(req.body);
@@ -62,6 +63,7 @@ exports.registerUser = async (req, res, next) => {
                             attendeeId: savedAttendee._id,
                         });
                     }
+                    (0, sendEmails_1.sendWelcomeEmail)(savedUser);
                 }));
             }
         });

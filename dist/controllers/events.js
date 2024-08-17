@@ -11,6 +11,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const fs_1 = __importDefault(require("fs"));
 const node_cache_1 = __importDefault(require("node-cache"));
 const validationSchema_1 = require("../utils/validationSchema");
+const sendEmails_1 = require("../utils/sendEmails");
 const myCache = new node_cache_1.default();
 exports.getSingleEvent = async (req, res, next) => {
     const eventId = req.params.id;
@@ -159,6 +160,7 @@ exports.addEvent = async (req, res, next) => {
                         email: authData.user.email,
                     } }));
                 const event = await newEvent.save();
+                (0, sendEmails_1.sendEventCreationEmail)(event);
                 await Organizer_1.default.findByIdAndUpdate(organizer, {
                     $push: { createdEvents: event },
                 });
