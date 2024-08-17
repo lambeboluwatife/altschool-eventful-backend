@@ -177,13 +177,13 @@ const sendEventCreationEmail = (event) => {
             <p>Thank you for trusting us with your events needs!</p>
             <h3>Here are your event details:</h3>
             <img src=${event.backdrop} />
-            <p>Title: ${event.title}</p>
-            <p>Location: ${event.location}</p>
-            <p>Description: ${event.description}</p>
-            <p>Category: ${event.category}</p>
-            <p>Date: ${event.date}</p>
-            <p>Time: ${event.time}</p>
-            <p>Price: ${event.price}</p>
+            <p><strong>Title:</strong> ${event.title}</p>
+            <p><strong>Location:</strong> ${event.location}</p>
+            <p><strong>Description:</strong> ${event.description}</p>
+            <p><strong>Category:</strong> ${event.category}</p>
+            <p><strong>Date:</strong> ${(0, moment_1.default)(event.date).format("dddd MMMM, YYYY")}</p>
+            <p><strong>Time:</strong> ${event.time}</p>
+            <p><strong>Price:</strong> ${event.price}</p>
             <a href=${`https://eventful-frontend.vercel.app/events/details/${event._id}`} class="button">View Event Details</a>
             <p>Best Regards,</p>
             <p>The Eventful Team</p>
