@@ -9,6 +9,14 @@ function getFirstWord(inputString: string) {
   return words.length > 0 ? words[0] : "";
 }
 
+function newUserMessage(role: string) {
+  if (role == "organizer") {
+    return "We'll love to see the wonderful events you will create.";
+  } else {
+    return "We are glad you chose us for your events needs.";
+  }
+}
+
 export const sendWelcomeEmail = (savedUser: IUser) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -19,7 +27,7 @@ export const sendWelcomeEmail = (savedUser: IUser) => {
   });
 
   const mailOptions = {
-    from: `"Eventful Team" <${process.env.EMAIL_USER}>`,
+    from: `"Eventful Team" <process.env.EMAIL_USER>`,
     to: savedUser.email,
     subject: "Welcome to Eventful!",
     html: `
@@ -76,14 +84,7 @@ export const sendWelcomeEmail = (savedUser: IUser) => {
             <h3>Hello, ${getFirstWord(savedUser.name)}</h3>
             <h1>Welcome to Eventful!</h1>
             <p>Thank you for joining us. We're excited to have you on board!</p>
-            <p>
-               ${`savedUser.role === "organizer" ? (
-                We'll love to see the wonderful events you will create.
-              ) : (
-                We are glad you chose us for your events needs.
-              )
-            `}
-            </p>
+            <p>${newUserMessage(savedUser.role)}</p>
             <p>Best Regards,</p>
             <p>The Eventful Team</p>
           </div>
@@ -174,6 +175,7 @@ export const sendEventCreationEmail = (event: IEvent) => {
             <h1>You created an event on Eventful</h1>
             <p>Thank you for trusting us with your events needs!</p>
             <h3>Here are your event details:</h3>
+            <img src=${event.backdrop} />
             <p>Title: ${event.title}</p>
             <p>Location: ${event.location}</p>
             <p>Description: ${event.description}</p>
