@@ -9,6 +9,7 @@ import fs from "fs";
 import { Document } from "mongoose";
 import NodeCache from "node-cache";
 import { eventSchema } from "../utils/validationSchema";
+import { sendEventCreationEmail } from "../utils/sendEmails";
 
 const myCache = new NodeCache();
 
@@ -207,7 +208,8 @@ exports.addEvent = async (req: Request, res: Response, next: NextFunction) => {
           },
         });
 
-        const event = await newEvent.save();
+        const event: IEvent = await newEvent.save();
+        sendEventCreationEmail(event);
 
         await Organizer.findByIdAndUpdate(organizer, {
           $push: { createdEvents: event },

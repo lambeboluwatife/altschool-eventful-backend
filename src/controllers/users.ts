@@ -7,6 +7,7 @@ import { authSchema } from "../utils/validationSchema";
 
 import bcrypt from "bcryptjs";
 import passport from "passport";
+import { sendWelcomeEmail } from "../utils/sendEmails";
 
 interface AuthInfo {
   message: string;
@@ -43,7 +44,7 @@ exports.registerUser = async (
             // Set password to hashed
             newUser.password = hash;
             // Save user
-            const savedUser = await newUser.save();
+            const savedUser: IUser = await newUser.save();
             if (validInputs.role === "organizer") {
               // Create the organizer entry
               const newOrganizer = new Organizer({
@@ -74,6 +75,8 @@ exports.registerUser = async (
                 attendeeId: savedAttendee._id,
               });
             }
+
+            sendWelcomeEmail(savedUser);
           })
         );
       }

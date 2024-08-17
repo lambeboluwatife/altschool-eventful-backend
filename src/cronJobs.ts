@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import Event from "./models/Event";
-import { sendReminder } from "./utils/sendReminders";
+import { sendReminderEmails } from "./utils/sendEmails";
 import moment from "moment";
 
 const checkEventsForReminders = async () => {
@@ -15,7 +15,7 @@ const checkEventsForReminders = async () => {
     if (Array.isArray(event.reminders)) {
       for (const reminder of event.reminders) {
         if (reminder.reminderTime <= todayDate && !reminder.sent) {
-          await sendReminder(reminder, event);
+          await sendReminderEmails(reminder, event);
 
           event.reminders.sent = true;
           await event.save();
