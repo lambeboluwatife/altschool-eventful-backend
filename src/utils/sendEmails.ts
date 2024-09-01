@@ -57,7 +57,7 @@ export const sendWelcomeEmail = (savedUser: IUser) => {
           }
           .content {
             padding: 20px;
-            text-align: left;
+            text-align: justify;
           }
           .footer {
             margin-top: 20px;
@@ -147,7 +147,7 @@ export const sendEventCreationEmail = (event: IEvent) => {
           }
           .content {
             padding: 20px;
-            text-align: left;
+            text-align: justify;
           }
           .footer {
             margin-top: 20px;
@@ -251,7 +251,7 @@ export const sendReminderEmails = async (
           }
           .content {
             padding: 20px;
-            text-align: left;
+            text-align: justify;
           }
           .footer {
             margin-top: 20px;
