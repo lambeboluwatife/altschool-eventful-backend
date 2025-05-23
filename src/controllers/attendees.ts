@@ -82,7 +82,7 @@ exports.applyToEvent = async (
       );
 
       if (alreadyApplied) {
-        return res.status(405).json({
+        return res.status(409).json({
           success: false,
           error: "Already applied.",
         });

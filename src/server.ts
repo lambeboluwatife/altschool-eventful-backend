@@ -19,6 +19,7 @@ const app: Application = express();
 const allowedOrigins = [
   "http://localhost:3000",
   "https://eventful-frontend.vercel.app",
+  "https://eventful-lbd.netlify.app/"
 ];
 
 const corsOptions = {

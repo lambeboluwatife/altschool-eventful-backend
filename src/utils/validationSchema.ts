@@ -1,5 +1,4 @@
 import Joi from "@hapi/joi";
-import { title } from "process";
 
 export const authSchema = Joi.object({
   name: Joi.string().required(),
